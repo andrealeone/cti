@@ -57,7 +57,6 @@ Inline manifest (small CLI):
 
 ```typescript
 import { command, defineManifest, run } from 'cti'
-import type { Config } from 'cti'
 
 const hello = command({
   meta: { description: 'Greet someone' },
@@ -66,18 +65,15 @@ const hello = command({
   },
 })
 
-const config: Config = { name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) }
-void run(config)
+void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) })
 ```
 
 Directory-scanned manifest (larger CLI) — pass `import.meta` and let `run()` discover commands from `config.commandsDir`:
 
 ```typescript
 import { run } from 'cti'
-import type { Config } from 'cti'
 
-const config: Config = { name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }
-void run(config, import.meta)
+void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.meta)
 ```
 
 (You can also call `discoverManifest(commandsDir)` yourself and assign the result to `config.manifest` — useful if you want to inspect or modify entries before dispatch. Either way, `Manifest` ends up on `config.manifest`.)

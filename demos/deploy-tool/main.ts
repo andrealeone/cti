@@ -1,5 +1,4 @@
 import { command, defineManifest, run } from 'cti'
-import type { Config } from 'cti'
 
 const deploy = command({
   meta: { description: 'Deploy application to an environment' },
@@ -55,11 +54,4 @@ const status = command({
   },
 })
 
-const config: Config = {
-  name: 'deploy-tool',
-  bin: 'deploy',
-  version: '1.0.0',
-  manifest: defineManifest({ deploy, rollback, status }),
-}
-
-void run(config)
+void run({ name: 'deploy-tool', bin: 'deploy', version: '1.0.0', manifest: defineManifest({ deploy, rollback, status }) })
