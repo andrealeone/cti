@@ -1,6 +1,6 @@
 ---
 name: about-cti
-description: Explains what CTI is, the problem it solves, who it's for, and how it compares to alternatives like Yargs, Commander.js, and Oclif. Use whenever the user asks "what is CTI", whether they should use CTI for a CLI project, how CTI differs from another CLI framework, or wants the rationale/vision/philosophy behind CTI before deciding to adopt it. This skill is about understanding and evaluating CTI, not about writing CTI code — for that, use build-with-cti instead.
+description: Explains what CTI is, the problem it solves, who it's for, and how it compares to alternatives like Yargs, Commander.js, and Oclif. Use whenever the user asks "what is CTI", whether they should use CTI for a CLI project, how CTI differs from another CLI framework, or wants the rationale/vision/philosophy behind CTI before deciding to adopt it. This skill is about understanding and evaluating CTI, not about writing CTI code — for that, use start-building-with-cti (new project) or migrate-to-cti (existing CLI) instead.
 ---
 
 # About CTI
@@ -92,4 +92,4 @@ That's the whole pitch: write commands as plain typed modules, let CTI handle di
 
 ## Going further
 
-If the user wants to actually start writing commands, structuring a project, or applying CTI's conventions in code, switch to the **build-with-cti** skill — it covers the exact API surface, project layout, and best practices with grounding in the source code.
+If the user wants to actually start writing commands, structuring a new project, or applying CTI's conventions in code, switch to the **start-building-with-cti** skill. If the user has an existing CLI (in any framework or language) and wants to port it onto CTI, switch to the **migrate-to-cti** skill instead.
