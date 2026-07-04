@@ -30,20 +30,18 @@ bun install
 Create `main.ts`. A command is a `CommandModule`; you map commands to routes with `defineManifest`, then dispatch with `run`:
 
 ```typescript
-import type { CommandModule } from './types/command'
-import type { Config } from './types/config'
+import { command } from './core/command'
 import { defineManifest, run } from './core/runtime'
 
-const hello: CommandModule = {
+const hello = command({
   meta: { description: 'Greet someone' },
   run(ctx) {
     const name = ctx.positionals[0] ?? 'World'
     ctx.io.write(`Hello, ${name}!`)
   },
-}
+})
 
-const config: Config = { name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) }
-void run(config)
+void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) })
 ```
 
 ### Run It
@@ -58,7 +56,7 @@ bun run ./main.ts hello Alice
 Declare flags on the command; `run` parses and coerces them into `ctx.flags`:
 
 ```typescript
-const hello: CommandModule = {
+const hello = command({
   meta: { description: 'Greet someone' },
   flags: {
     formal: { type: 'boolean', short: 'f', description: 'Use a formal greeting' },
@@ -68,7 +66,7 @@ const hello: CommandModule = {
     const greeting = ctx.flags.formal ? 'Greetings' : 'Hello'
     ctx.io.write(`${greeting}, ${name}!`)
   },
-}
+})
 ```
 
 Run it:

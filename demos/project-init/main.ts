@@ -1,5 +1,4 @@
 import { command, defineManifest, run } from 'cti'
-import type { Config } from 'cti'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -46,11 +45,4 @@ const init = command({
   },
 })
 
-const config: Config = {
-  name: 'project-init',
-  bin: 'init',
-  version: '1.0.0',
-  manifest: defineManifest({ init }),
-}
-
-void run(config)
+void run({ name: 'project-init', bin: 'init', version: '1.0.0', manifest: defineManifest({ init }) })

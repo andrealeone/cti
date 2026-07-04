@@ -1,5 +1,4 @@
 import { command, defineManifest, run } from 'cti'
-import type { Config } from 'cti'
 
 const hello = command({
   meta: { description: 'Greet someone' },
@@ -17,11 +16,4 @@ const goodbye = command({
   },
 })
 
-const config: Config = {
-  name: 'hello-world',
-  bin: 'hello',
-  version: '1.0.0',
-  manifest: defineManifest({ hello, goodbye }),
-}
-
-void run(config)
+void run({ name: 'hello-world', bin: 'hello', version: '1.0.0', manifest: defineManifest({ hello, goodbye }) })

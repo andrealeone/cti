@@ -73,14 +73,8 @@ Create `main.ts`:
 
 ```typescript
 import { run } from 'cti'
-import type { Config } from 'cti'
 
-const config: Config = {
-  name: 'new-cli',
-  version: '1.0.0',
-}
-
-void run(config, import.meta)
+void run({ name: 'new-cli', version: '1.0.0' }, import.meta)
 ```
 
 That's the whole entrypoint, and it's the last time you'll edit it. CTI automatically
