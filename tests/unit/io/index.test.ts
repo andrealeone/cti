@@ -88,4 +88,42 @@ describe('createLogger', () => {
       expect(calls).toBe(1)
     })
   })
+
+  describe('info', () => {
+    test('always prints via console.log', () => {
+      const original = console.log
+      let calls = 0
+
+      console.log = () => {
+        calls++
+      }
+
+      try {
+        createLogger().info('hello')
+      } finally {
+        console.log = original
+      }
+
+      expect(calls).toBe(1)
+    })
+  })
+
+  describe('warn', () => {
+    test('always prints via console.warn', () => {
+      const original = console.warn
+      let calls = 0
+
+      console.warn = () => {
+        calls++
+      }
+
+      try {
+        createLogger().warn('careful')
+      } finally {
+        console.warn = original
+      }
+
+      expect(calls).toBe(1)
+    })
+  })
 })

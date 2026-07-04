@@ -30,14 +30,17 @@ each gets a sibling `*.test.ts`:
 
 | Source                | Test                        | Covers                                             |
 | --------------------- | --------------------------- | -------------------------------------------------- |
-| `src/core/parser.ts`  | `unit/core/parser.test.ts`  | `toParseArgsOptions`, `parseAndCoerce`             |
-| `src/core/router.ts`  | `unit/core/router.test.ts`  | `buildRouteLookup`, `resolveRoute` (longest-match) |
-| `src/io/colour.ts`    | `unit/io/colour.test.ts`    | `colourize` (NO_COLOR / FORCE_COLOR)               |
+| `src/core/command.ts`   | `unit/core/command.test.ts`   | `command()` helper                                          |
+| `src/core/discovery.ts` | `unit/core/discovery.test.ts` | `discoverManifest` (routing, `index.ts` collapse, skips)     |
+| `src/core/parser.ts`    | `unit/core/parser.test.ts`    | `toParseArgsOptions`, `parseAndCoerce`                       |
+| `src/core/router.ts`    | `unit/core/router.test.ts`    | `buildRouteLookup`, `resolveRoute` (longest-match)           |
+| `src/core/runtime.ts`   | `unit/core/runtime.test.ts`   | `defineManifest`, `run` (inline + directory-discovery paths) |
+| `src/io/color.ts`     | `unit/io/color.test.ts`     | `colorize` (NO_COLOR / FORCE_COLOR)                |
 | `src/io/index.ts`     | `unit/io/index.test.ts`     | `createIo`, `createLogger`                         |
 | `src/io/prompt.ts`    | `unit/io/prompt.test.ts`    | `prompt`, `confirm`, `select` (current stubs)      |
 | `src/io/spinner.ts`   | `unit/io/spinner.test.ts`   | `createSpinner` (no-op handle shape)               |
 | `src/utils/coerce.ts` | `unit/utils/coerce.test.ts` | `coerceValue`                                      |
-| `src/utils/tty.ts`    | `unit/utils/tty.test.ts`    | `shouldUseColour`, `isTTY` (env precedence)        |
+| `src/utils/tty.ts`    | `unit/utils/tty.test.ts`    | `shouldUseColor`, `isTTY` (env precedence)         |
 
 Type-only files under `src/types/` need no tests; they are exercised indirectly.
 `prompt`/`spinner` are currently non-interactive stubs — their tests pin the stub
@@ -45,12 +48,9 @@ contract so a future real implementation becomes a deliberate, test-visible chan
 
 ## E2E test structure
 
-E2E spawns the real CLI and asserts on argv → stdout/stderr/exit. Intended cases
-live in `e2e/cli.e2e.test.ts` as `test.todo` because **there is no CLI entry point
-yet**: `package.json` points at `main.ts`, which does not exist. The current
-`src/` provides the primitives (parser, router, io, utils) but nothing wires them
-into a runnable dispatcher. Once `main.ts` (or a `dist/` binary) lands, convert
-the `test.todo`s into real `Bun.spawn` assertions. Suggested split as it grows:
+E2E spawns the real CLI (`e2e/cli.ts`, driven via `run()` + `defineManifest`) and
+asserts on argv → stdout/stderr/exit code, proving routing, parsing, dispatch,
+and IO work together end-to-end. Suggested split as it grows:
 
 - `e2e/dispatch.e2e.test.ts` — routing + positionals + unknown-command exit codes
 - `e2e/flags.e2e.test.ts` — flag parsing/coercion, defaults, `--help`

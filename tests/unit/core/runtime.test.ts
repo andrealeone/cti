@@ -1,4 +1,7 @@
 import { describe, test, expect, beforeEach, mock } from 'bun:test'
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { defineManifest, run } from '@/core/runtime'
 import type { CommandModule } from '@/types/command'
 import type { Manifest } from '@/types/manifest'
@@ -414,5 +417,82 @@ describe('run', () => {
 
     expect(result).toBe(0)
     expect(runFn).toHaveBeenCalled()
+  })
+})
+
+describe('run (directory discovery)', () => {
+  function withCapturedConsoleError<T>(fn: () => T): { result: T; messages: string[] } {
+    const original = console.error
+    const messages: string[] = []
+
+    console.error = (...args: unknown[]) => {
+      messages.push(args.join(' '))
+    }
+
+    try {
+      return { result: fn(), messages }
+    } finally {
+      console.error = original
+    }
+  }
+
+  test('discovers and runs a command from a real commandsDir next to importMeta.dir', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'cti-runtime-discover-'))
+    mkdirSync(join(root, 'commands'))
+    writeFileSync(
+      join(root, 'commands', 'hello.ts'),
+      `export default { run: (ctx: any) => { ctx.io.write('hi'); return 0 } }`,
+    )
+
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
+    const result = await run(config, { dir: root }, ['hello'])
+
+    expect(result).toBe(0)
+  })
+
+  test('returns 1 and reports an error when importMeta is missing and no manifest is set', async () => {
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
+
+    const { result, messages } = await withCapturedConsoleError(() => run(config, undefined, ['hello']))
+
+    expect(await result).toBe(1)
+    expect(messages.some((m) => m.includes('requires passing import.meta'))).toBe(true)
+  })
+
+  test('falls back to the parent directory when commandsDir is not found next to importMeta.dir', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'cti-runtime-parent-'))
+    mkdirSync(join(root, 'commands'))
+    mkdirSync(join(root, 'sub'))
+    writeFileSync(
+      join(root, 'commands', 'hello.ts'),
+      `export default { run: (ctx: any) => { ctx.io.write('parent-hi'); return 0 } }`,
+    )
+
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
+    const result = await run(config, { dir: join(root, 'sub') }, ['hello'])
+
+    expect(result).toBe(0)
+  })
+
+  test('returns 1 and reports an error when discoverManifest fails to load a command', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'cti-runtime-broken-'))
+    mkdirSync(join(root, 'commands'))
+    writeFileSync(join(root, 'commands', 'broken.ts'), `export default { this is not valid typescript`)
+
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
+
+    const original = console.error
+    const captured: string[] = []
+    console.error = (...args: unknown[]) => captured.push(args.join(' '))
+
+    let result: number
+    try {
+      result = await run(config, { dir: root }, ['broken'])
+    } finally {
+      console.error = original
+    }
+
+    expect(result).toBe(1)
+    expect(captured.some((m) => m.includes('failed to discover commands'))).toBe(true)
   })
 })
