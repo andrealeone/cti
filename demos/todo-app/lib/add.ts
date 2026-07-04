@@ -1,5 +1,5 @@
 import { command } from 'cti'
-import { loadTodos, saveTodos } from '../lib/state'
+import { loadTodos, saveTodos } from '../state'
 
 export default command({
   meta: { description: 'Add a new TODO item' },
