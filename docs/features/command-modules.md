@@ -29,10 +29,17 @@ your `flags` declaration, so wrap every command definition with it rather than
 exporting a plain object literal.
 
 ```typescript
-export function command<F = Record<string, unknown>>(module: CommandModule<F>): CommandModule<F> {
+export function command<F = Record<string, unknown>, C extends Config = Config>(
+  module: CommandModule<F, C>,
+): CommandModule<F, C> {
   return module
 }
 ```
+
+The second generic, `C`, only matters for CLIs whose entrypoint calls
+`run<ConfigType>()` with an extended `Config` (see
+[Config](../reference/api-reference.md#config)). Pass it explicitly to type
+`ctx.config` without a cast: `command<Flags, MyConfig>({ ... })`.
 
 It does not validate anything at load time; a malformed `FlagSpec` or missing
 `run` is caught by the TypeScript compiler (`bun run check:types`), not at

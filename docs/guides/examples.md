@@ -264,6 +264,32 @@ export default {
 } satisfies CommandModule
 ```
 
+`ctx.config.apiUrl` above assumes `Config` was extended with an `apiUrl`
+field. To get that typed without casting, extend `Config`, pass the extended
+type to `run<ConfigType>()` in your entrypoint, and declare the same type on
+`command<F, ConfigType>()`:
+
+```typescript
+// main.ts
+interface MyConfig extends Config {
+  apiUrl: string
+}
+
+const config: MyConfig = { name: 'my-cli', version: '1.0.0', apiUrl: 'https://api.example.com' }
+void run<MyConfig>(config, import.meta)
+```
+
+```typescript
+// src/commands/request.ts
+export default command<Record<string, unknown>, MyConfig>({
+  run: async (ctx) => {
+    ctx.config.apiUrl // string, not a cast
+  },
+})
+```
+
+See the `api-client` demo (in [Demos](demos.md)) for the full working pattern.
+
 ---
 
 These examples show:

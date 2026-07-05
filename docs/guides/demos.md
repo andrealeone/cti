@@ -7,8 +7,8 @@ you can run, read, copy, and adapt. They cover both onboarding patterns
 discovery for many, including `index.ts` route collapsing) and every `ctx.io`
 primitive, including TTY-aware output. Between them, the demos also exercise
 repeatable (`multiple: true`) flags, in-handler `choices` validation, `args[]`
-specs, `meta.aliases`/`meta.hidden`, explicit `command<F>()` generics, and
-custom `ctx.config` fields.
+specs, `meta.aliases`/`meta.hidden`, explicit `command<F, C>()` generics, and
+custom `ctx.config` fields typed via `run<ConfigType>()`.
 
 The full demo list, what each one demonstrates, and the exact commands to run
 them live in the demos folder's own **[README](../../demos/readme.md)**. That's

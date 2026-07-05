@@ -23,6 +23,16 @@ const config: Config = { name: 'demo', version: '1.0.0', manifest: defineManifes
 const exitCode = await run(config)
 ```
 
+`run` is generic over `ConfigType extends Config`, so a CLI whose `Config`
+carries extra fields can pass that type explicitly and have it flow through
+to every command's `ctx.config`:
+
+```typescript
+void run<ApiClientConfig>(config, import.meta)
+```
+
+See [Type System: Config](types.md#config) and `demos/api-client`.
+
 Internally it:
 
 1. Resolves the manifest (`config.manifest` or discovery)

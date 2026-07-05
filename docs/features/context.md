@@ -5,13 +5,13 @@ function. It's the only thing a handler reads, and `run()` is the only thing
 that writes it, and that separation is what makes commands easy to test.
 
 ```typescript
-interface Context<F = Record<string, unknown>> {
+interface Context<F = Record<string, unknown>, C extends Config = Config> {
   flags: F
   positionals: string[]
   route: string[]
   cwd: string
   env: Record<string, string | undefined>
-  config: Config
+  config: C
   io: Io
   logger: Logger
 }
@@ -88,6 +88,32 @@ run(ctx) {
 Extend `Config` with your own properties (an API base URL, feature flags,
 whatever your commands need); concise-ti only reads the fields above.
 
+```typescript
+interface ApiClientConfig extends Config {
+  apiVersion: string
+}
+
+const config: ApiClientConfig = { name: 'api-client', version: '1.0.0', apiVersion: 'v2' }
+
+void run<ApiClientConfig>(config, import.meta)
+```
+
+Passing `ApiClientConfig` as `run`'s type argument makes `ctx.config` typed as
+`ApiClientConfig` in every command, once that command opts in with the same
+type on `command()`:
+
+```typescript
+export default command<Record<string, unknown>, ApiClientConfig>({
+  run(ctx) {
+    ctx.config.apiVersion // string, not a cast
+  },
+})
+```
+
+Without the second `command()` type argument, `ctx.config` stays typed as the
+base `Config`. See [Type safety with generics](#type-safety-with-generics)
+below and `demos/api-client`.
+
 ## `io` and `logger`
 
 ```typescript
@@ -102,7 +128,7 @@ See [I/O System](../architecture/io.md) and [Logger](logger.md).
 
 ## Type safety with generics
 
-`Context<F>` carries your flag shape:
+`Context<F, C>` carries your flag shape and your `Config` shape:
 
 ```typescript
 interface DeployFlags {
@@ -118,6 +144,16 @@ export default command<DeployFlags>({
   run(ctx) {
     ctx.flags.environment // string, not unknown
     ctx.flags.force // boolean, not unknown
+  },
+})
+```
+
+`C` works the same way for an extended `Config` (default `Config` if omitted):
+
+```typescript
+export default command<DeployFlags, DeployConfig>({
+  run(ctx) {
+    ctx.config.someExtendedField // typed, not a cast
   },
 })
 ```

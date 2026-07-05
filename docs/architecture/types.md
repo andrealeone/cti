@@ -7,11 +7,11 @@ command stays minimal.
 ### CommandModule
 
 ```typescript
-interface CommandModule<F = Record<string, unknown>> {
+interface CommandModule<F = Record<string, unknown>, C extends Config = Config> {
   meta?: CommandMeta
   flags?: Record<string, FlagSpec>
   args?: ArgSpec[]
-  run: (ctx: Context<F>) => void | number | Promise<void | number>
+  run: (ctx: Context<F, C>) => void | number | Promise<void | number>
 }
 
 interface CommandMeta {
@@ -65,19 +65,21 @@ interface FlagSpec {
 ### Context
 
 ```typescript
-interface Context<F = Record<string, unknown>> {
+interface Context<F = Record<string, unknown>, C extends Config = Config> {
   flags: F
   positionals: string[]
   route: string[]
   cwd: string
   env: Record<string, string | undefined>
-  config: Config
+  config: C
   io: Io
   logger: Logger
 }
 ```
 
-Everything a handler needs, in one object, built fresh per invocation.
+Everything a handler needs, in one object, built fresh per invocation. `C`
+carries an extended `Config` type through to `ctx.config`, mirroring the
+`ConfigType` passed to `run<ConfigType>()` — see [Config](#config) below.
 
 ### Io
 
@@ -153,6 +155,10 @@ interface Config {
 Minimal by design; extend it with your own properties as needed. `bin`
 defaults to `name` when not set. When `manifest` is set, `run()` uses it
 directly and skips discovery.
+
+Pass an extended `Config` type as `run<ConfigType>()`'s type argument to get
+a typed `ctx.config` in every command, via `CommandModule<F, ConfigType>` /
+`Context<F, ConfigType>` (see `demos/api-client`).
 
 ### File organization
 
