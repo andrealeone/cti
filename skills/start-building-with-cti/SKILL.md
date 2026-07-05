@@ -1,21 +1,21 @@
 ---
 name: start-building-with-cti
-description: Use when writing or scaffolding a brand-new CLI built on CTI (the Bun-native TypeScript CLI framework) — creating command files, wiring up an entrypoint with defineManifest/discoverManifest, declaring flags/positionals, structuring a commands directory, using ctx.io (color, spinner, prompt, confirm, select), or following CTI's conventions for testing and error handling. Triggers on phrases like "set up a CTI project", "add a command to this CTI CLI", "how do I declare a flag in CTI", "structure this CLI with CTI". For turning an existing non-CTI CLI into a CTI one, use migrate-to-cti instead. Not for explaining what CTI is or pitching it — use about-cti for that.
+description: Use when writing or scaffolding a brand-new CLI built on CTI (the Bun-native TypeScript CLI framework): creating command files, wiring up an entrypoint with defineManifest/discoverManifest, declaring flags/positionals, structuring a commands directory, using ctx.io (color, spinner, prompt, confirm, select), or following CTI's conventions for testing and error handling. Triggers on phrases like "set up a CTI project", "add a command to this CTI CLI", "how do I declare a flag in CTI", "structure this CLI with CTI". For turning an existing non-CTI CLI into a CTI one, use migrate-to-cti instead. Not for explaining what CTI is or pitching it; use about-cti for that.
 ---
 
 # Starting a CLI with CTI
 
-CTI is a Bun-native TypeScript framework for building CLIs out of plain objects — no classes, no decorators, no code generation. This skill is the complete, self-contained API contract: everything needed to scaffold a new CTI project from an empty directory.
+CTI is a Bun-native TypeScript framework for building CLIs out of plain objects: no classes, no decorators, no code generation. This skill is the complete, self-contained API contract: everything needed to scaffold a new CTI project from an empty directory.
 
 ## The mental model
 
 A CTI CLI has exactly three moving parts:
 
-1. **Command modules** — plain objects (`CommandModule`) with `meta`, `flags`, `args`, and a `run(ctx)` handler.
-2. **A manifest** — maps route strings (e.g. `'db/migrate'`) to command modules, built either inline (`defineManifest`) or by scanning a directory (`discoverManifest`). Assign it to `config.manifest`, or leave it unset and let `run()` discover one from `config.commandsDir`.
-3. **The runtime** — `run(config, importMeta?)` resolves argv against the manifest using longest-prefix match, lazily loads the matched command, parses/coerces its flags, builds a `Context`, and invokes the command's `run()`. It returns the process exit code.
+1. **Command modules**: plain objects (`CommandModule`) with `meta`, `flags`, `args`, and a `run(ctx)` handler.
+2. **A manifest**: maps route strings (e.g. `'db/migrate'`) to command modules, built either inline (`defineManifest`) or by scanning a directory (`discoverManifest`). Assign it to `config.manifest`, or leave it unset and let `run()` discover one from `config.commandsDir`.
+3. **The runtime**: `run(config, importMeta?)` resolves argv against the manifest using longest-prefix match, lazily loads the matched command, parses/coerces its flags, builds a `Context`, and invokes the command's `run()`. It returns the process exit code.
 
-Everything else (colour output, spinners, prompts, logging) hangs off the `Context` object passed into every handler.
+Everything else (color output, spinners, prompts, logging) hangs off the `Context` object passed into every handler.
 
 Import everything from the package root:
 
@@ -26,9 +26,9 @@ import type { Config, Context, Io, Logger, Manifest, CommandModule } from 'cti'
 
 ## Choosing a project shape
 
-Two valid shapes — pick based on command count, and don't mix them without reason.
+Two valid shapes; pick based on command count, and don't mix them without reason.
 
-**Small CLI (a handful of commands) — inline manifest, no commands directory:**
+**Small CLI (a handful of commands): inline manifest, no commands directory:**
 
 ```
 my-cli/
@@ -52,7 +52,7 @@ const hello = command({
 void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) })
 ```
 
-**Larger CLI (many commands) — directory-scanned manifest:**
+**Larger CLI (many commands): directory-scanned manifest:**
 
 ```
 my-cli/
@@ -75,11 +75,11 @@ import { run } from 'cti'
 void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.meta)
 ```
 
-`commandsDir` is just a config value — name the directory whatever fits the project (`'lib'`, `'cmd'`, etc.), it does not have to be literally `commands`.
+`commandsDir` is just a config value; name the directory whatever fits the project (`'lib'`, `'cmd'`, etc.), it does not have to be literally `commands`.
 
 **Routing rule:** every `.ts` file under the commands directory becomes a route that mirrors its file path (`commands/db/migrate.ts` → `db migrate`); a file named `index.ts` collapses into its parent's route (`commands/db/index.ts` → `db`); files matching `*.test.ts` are skipped and never become routes.
 
-You can also call `discoverManifest(commandsDir)` yourself and assign the result to `config.manifest` — useful if you want to inspect or modify entries before dispatch. Either way, a `Manifest` ends up on `config.manifest`.
+You can also call `discoverManifest(commandsDir)` yourself and assign the result to `config.manifest`, which is useful if you want to inspect or modify entries before dispatch. Either way, a `Manifest` ends up on `config.manifest`.
 
 ## Config
 
@@ -94,11 +94,11 @@ interface Config {
 }
 ```
 
-There's no enforced loader — build it however suits the project. It's available to every command as `ctx.config`. Set `manifest` directly for the inline shape, or leave it unset and pass `import.meta` to `run()` so it can discover one from `commandsDir` for the directory-scanned shape. If `bin` is omitted, it defaults to `name`.
+There's no enforced loader; build it however suits the project. It's available to every command as `ctx.config`. Set `manifest` directly for the inline shape, or leave it unset and pass `import.meta` to `run()` so it can discover one from `commandsDir` for the directory-scanned shape. If `bin` is omitted, it defaults to `name`.
 
 ## Writing a command
 
-Prefer the `command()` helper over a bare object literal with `satisfies CommandModule` — it gives the same type inference with less ceremony:
+Prefer the `command()` helper over a bare object literal with `satisfies CommandModule`; it gives the same type inference with less ceremony:
 
 ```typescript
 import { command } from 'cti'
@@ -119,7 +119,7 @@ export default command({
 })
 ```
 
-`meta`, `flags`, and `args` are all optional — the minimal command is just `command({ run(ctx) { ... } })`.
+`meta`, `flags`, and `args` are all optional; the minimal command is just `command({ run(ctx) { ... } })`.
 
 ### CommandMeta
 
@@ -147,9 +147,9 @@ interface FlagSpec {
 }
 ```
 
-Flags are parsed via Node's `util.parseArgs` under the hood and coerced to their declared type; an invalid number throws. Numeric defaults are stringified internally for `parseArgs` and coerced back, so you don't need to think about that — just declare `type: 'number'` with a numeric `default`.
+Flags are parsed via Node's `util.parseArgs` under the hood and coerced to their declared type; an invalid number throws. Numeric defaults are stringified internally for `parseArgs` and coerced back, so you don't need to think about that; just declare `type: 'number'` with a numeric `default`.
 
-### Positionals (`ArgSpec`, declarative — currently informational)
+### Positionals (`ArgSpec`, declarative and currently informational)
 
 ```typescript
 interface ArgSpec {
@@ -161,11 +161,11 @@ interface ArgSpec {
 }
 ```
 
-In practice, positionals arrive as a plain `string[]` on `ctx.positionals` regardless of whether `args` is declared — access them by index (`ctx.positionals[0]`) and validate yourself in `run()`. A missing positional is just `undefined`, not an error thrown for you, so always validate before using it.
+In practice, positionals arrive as a plain `string[]` on `ctx.positionals` regardless of whether `args` is declared. Access them by index (`ctx.positionals[0]`) and validate yourself in `run()`. A missing positional is just `undefined`, not an error thrown for you, so always validate before using it.
 
 ### Type-safe flags via generics
 
-Always type the handler's `Context` generic with your flags shape — without it, `ctx.flags.whatever` is `any` and arithmetic/boolean checks can fail silently at runtime:
+Always type the handler's `Context` generic with your flags shape; without it, `ctx.flags.whatever` is `any` and arithmetic/boolean checks can fail silently at runtime:
 
 ```typescript
 interface DeployFlags {
@@ -202,9 +202,9 @@ interface Context<F = Record<string, unknown>> {
 }
 ```
 
-This is the only argument a handler receives — everything the command needs comes through it.
+This is the only argument a handler receives; everything the command needs comes through it.
 
-## The I/O interface — mind the spelling
+## The I/O interface: mind the spelling
 
 ```typescript
 interface Io {
@@ -221,7 +221,7 @@ interface Io {
 type Color = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'gray'
 ```
 
-**Use American spelling: `ctx.io.color(...)` and `Color`, not `colour`/`Colour`.** If you encounter prose (docs, comments, another codebase you're porting from) that spells it the British way, treat that as wrong for this framework — the actual interface only has `color`, and code written as `colour` will fail to compile.
+**Use American spelling: `ctx.io.color(...)` and `Color`, not `colour`/`Colour`.** If you encounter prose (docs, comments, another codebase you're porting from) that spells it the British way, treat that as wrong for this framework: the actual interface only has `color`, and code written as `colour` will fail to compile.
 
 ```typescript
 ctx.io.write(ctx.io.color('✓ Deployment successful', 'green'))
@@ -240,7 +240,7 @@ const ok = await ctx.io.confirm('Continue?', false)
 const choice = await ctx.io.select('Pick one:', ['a', 'b', 'c'] as const)
 ```
 
-`spinner()`, `prompt()`, `confirm()`, and `select()` are currently lightweight/stub-level implementations (no animation yet) but are the stable API to code against — write against the interface, not the current behaviour.
+`spinner()`, `prompt()`, `confirm()`, and `select()` are currently lightweight/stub-level implementations (no animation yet) but are the stable API to code against; write against the interface, not the current behavior.
 
 ## Logger
 
@@ -254,7 +254,7 @@ interface Logger {
 }
 ```
 
-`ctx.logger.debug(...)` only prints when the `DEBUG` env var is set; the others always print. Use `logger` for internal diagnostics, `io.write`/`io.writeError` for user-facing output — don't conflate the two.
+`ctx.logger.debug(...)` only prints when the `DEBUG` env var is set; the others always print. Use `logger` for internal diagnostics and `io.write`/`io.writeError` for user-facing output; don't conflate the two.
 
 ## Patterns to follow
 
@@ -284,9 +284,9 @@ run: async (ctx) => {
 }
 ```
 
-**Exit codes are the `run()` return value** — the runtime sets `process.exitCode` to that value internally, so the entrypoint just calls `void run(config)`; no `process.exit()` needed. Return `1` (or any non-zero number) for failure, `0` or `undefined` for success.
+**Exit codes are the `run()` return value.** The runtime sets `process.exitCode` to that value internally, so the entrypoint just calls `void run(config)`; no `process.exit()` needed. Return `1` (or any non-zero number) for failure, `0` or `undefined` for success.
 
-**Errors thrown from a handler are caught by the runtime** and printed as `Error: <message>` with exit code 1 — you don't need a top-level try/catch purely to avoid a crash, but catch specific, expected errors yourself to give a better message:
+**Errors thrown from a handler are caught by the runtime** and printed as `Error: <message>` with exit code 1. You don't need a top-level try/catch purely to avoid a crash, but catch specific, expected errors yourself to give a better message:
 
 ```typescript
 run: async (ctx) => {
@@ -330,7 +330,7 @@ test('runs successfully', async () => {
 })
 ```
 
-Mirror your test layout to your source layout for consistency — e.g. `commands/add.ts` → `tests/unit/commands/add.test.ts`. For directory-scanned CLIs, also add a black-box test per command that spawns the compiled entrypoint (`Bun.spawn(['bun', 'run', 'main.ts', ...args])`) and asserts on stdout/stderr/exit code, so routing and flag-parsing are exercised together, not just the handler in isolation.
+Mirror your test layout to your source layout for consistency, e.g. `commands/add.ts` → `tests/unit/commands/add.test.ts`. For directory-scanned CLIs, also add a black-box test per command that spawns the compiled entrypoint (`Bun.spawn(['bun', 'run', 'main.ts', ...args])`) and asserts on stdout/stderr/exit code, so routing and flag-parsing are exercised together, not just the handler in isolation.
 
 ## Building a binary
 
@@ -339,15 +339,15 @@ bun build ./main.ts --compile --outfile dist/my-cli
 ./dist/my-cli hello Alice
 ```
 
-No further config needed — this is the whole release pipeline for a CTI CLI.
+No further config needed; this is the whole release pipeline for a CTI CLI.
 
 ## Quick checklist for a new project
 
-1. Decide: inline (`defineManifest`) or directory-scanned (`discoverManifest`) — pick one shape and stick to it.
+1. Decide: inline (`defineManifest`) or directory-scanned (`discoverManifest`). Pick one shape and stick to it.
 2. Scaffold `main.ts`, `package.json`, `tsconfig.json`, and (for the directory-scanned shape) a commands directory.
-3. Build each command with `command({ meta, flags, run })` — `meta` and `flags` are optional, `run` is required.
+3. Build each command with `command({ meta, flags, run })`. `meta` and `flags` are optional, `run` is required.
 4. Type `Context<YourFlagsInterface>` if the command declares flags, so `ctx.flags` isn't `any`.
 5. Validate positionals/required flags at the top of `run()`; return `1` on failure.
-6. Use `ctx.io.color` (not `colour`) for coloured output, `ctx.io.write`/`writeError` for output, `ctx.logger` for diagnostics gated behind `DEBUG`.
+6. Use `ctx.io.color` (not `colour`) for colored output, `ctx.io.write`/`writeError` for output, `ctx.logger` for diagnostics gated behind `DEBUG`.
 7. If destructive, gate on a `force` flag with a `ctx.io.confirm()` fallback.
 8. Add a unit test per command, mirroring the source layout.
