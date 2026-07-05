@@ -52,65 +52,56 @@ export async function run(
   return exitCode
 }
 
-async function dispatch(
+/**
+ * Resolve the effective commands directory for auto-discovery. Falls back to
+ * the parent directory when the entrypoint lives in a subdirectory but
+ * `commands/` sits at the project root.
+ */
+function resolveCommandsDir(importMetaDir: string, commandsDir: string): string {
+  const resolved = join(importMetaDir, commandsDir)
+
+  if (existsSync(resolved)) return resolved
+
+  const parentCommandsDir = join(dirname(importMetaDir), commandsDir)
+
+  return existsSync(parentCommandsDir) ? parentCommandsDir : resolved
+}
+
+/** Resolve `config.manifest`, or auto-discover one from `config.commandsDir`. */
+async function resolveManifest(
   config: Config,
   importMeta?: { dir: string },
-  argv?: string[],
-): Promise<number> {
-  let manifest: Manifest
+): Promise<Manifest | number> {
+  if (config.manifest) return config.manifest
 
-  if (config.manifest) {
-    manifest = config.manifest
-  } else {
-    if (!importMeta?.dir) {
-      console.error(
-        'Error: discovering commands from config.commandsDir requires passing import.meta (with a dir) as the second argument to run().',
-      )
-
-      return 1
-    }
-
-    // Auto-discover manifest from config.commandsDir
-    const commandsDir = config.commandsDir ?? 'commands'
-    let resolvedCommandsDir = join(importMeta.dir, commandsDir)
-
-    // If commands dir doesn't exist, try looking in the parent directory
-    // (handles case where CLI entrypoint is in a subdirectory but commands is at the project root)
-    if (!existsSync(resolvedCommandsDir)) {
-      const parentDir = dirname(importMeta.dir),
-        parentCommandsDir = join(parentDir, commandsDir)
-
-      if (existsSync(parentCommandsDir)) resolvedCommandsDir = parentCommandsDir
-    }
-
-    try {
-      manifest = await discoverManifest(resolvedCommandsDir)
-    } catch (error) {
-      console.error(
-        `Error: failed to discover commands in "${resolvedCommandsDir}": ${error instanceof Error ? error.message : String(error)}`,
-      )
-      return 1
-    }
-  }
-
-  const resolvedArgv = argv ?? Bun.argv.slice(2)
-
-  const io = createIo(),
-    logger = createLogger()
-
-  // Use name as default for bin if not provided
-  if (!config.bin) config.bin = config.name
-
-  const match = resolveRoute(resolvedArgv, buildRouteLookup(manifest))
-
-  if (!match) {
-    io.writeError(`Unknown command: ${resolvedArgv.join(' ') || '(none)'}`)
+  if (!importMeta?.dir) {
+    console.error(
+      'Error: discovering commands from config.commandsDir requires passing import.meta (with a dir) as the second argument to run().',
+    )
     return 1
   }
 
-  const { entry, remaining } = match,
-    command = (await entry.importer()).default
+  const resolvedCommandsDir = resolveCommandsDir(importMeta.dir, config.commandsDir ?? 'commands')
 
+  try {
+    return await discoverManifest(resolvedCommandsDir)
+  } catch (error) {
+    console.error(
+      `Error: failed to discover commands in "${resolvedCommandsDir}": ${error instanceof Error ? error.message : String(error)}`,
+    )
+    return 1
+  }
+}
+
+/** Run the resolved command and translate its outcome (or a thrown error) into an exit code. */
+async function invokeCommand(
+  command: CommandModule,
+  entry: Manifest['entries'][number],
+  remaining: string[],
+  config: Config,
+  io: ReturnType<typeof createIo>,
+  logger: ReturnType<typeof createLogger>,
+): Promise<number> {
   try {
     const parsed = parseAndCoerce(remaining, command.flags ?? {}),
       context: Context = {
@@ -132,4 +123,34 @@ async function dispatch(
 
     return 1
   }
+}
+
+async function dispatch(
+  config: Config,
+  importMeta?: { dir: string },
+  argv?: string[],
+): Promise<number> {
+  const manifest = await resolveManifest(config, importMeta)
+
+  if (typeof manifest === 'number') return manifest
+
+  const resolvedArgv = argv ?? Bun.argv.slice(2)
+
+  const io = createIo(),
+    logger = createLogger()
+
+  // Use name as default for bin if not provided
+  if (!config.bin) config.bin = config.name
+
+  const match = resolveRoute(resolvedArgv, buildRouteLookup(manifest))
+
+  if (!match) {
+    io.writeError(`Unknown command: ${resolvedArgv.join(' ') || '(none)'}`)
+    return 1
+  }
+
+  const { entry, remaining } = match,
+    command = (await entry.importer()).default
+
+  return invokeCommand(command, entry, remaining, config, io, logger)
 }

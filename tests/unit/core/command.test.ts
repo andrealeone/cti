@@ -121,7 +121,7 @@ describe('command', () => {
       positionals: [],
       route: [],
       cwd: process.cwd(),
-      env: process.env as Record<string, string | undefined>,
+      env: process.env,
       config: {
         name: 'test',
         commandsDir: '.',
