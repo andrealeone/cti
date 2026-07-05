@@ -206,8 +206,12 @@ function formatHeading(config: Config): string {
   return `${config.bin} ${config.version} (built with concise-ti)`
 }
 
-/** Builds the default `help` command, listing every non-hidden route in `entries`. */
-function buildHelpCommand(entries: ManifestEntry[]): CommandModule {
+/**
+ * Builds the default `help` command, listing every non-hidden route in `entries`.
+ * `entryRoute` is the slash-delimited route dispatched to for empty argv (`config.entry`,
+ * default `'help'`); when it isn't the default, the listing notes it explicitly.
+ */
+function buildHelpCommand(entries: ManifestEntry[], entryRoute: string): CommandModule {
   return {
     meta: { description: 'Show available commands' },
     flags: { json: { type: 'boolean', description: 'Output as JSON' } },
@@ -223,6 +227,7 @@ function buildHelpCommand(entries: ManifestEntry[]): CommandModule {
               route: entry.route.join('/'),
               description: entry.meta?.description ?? null,
             })),
+            entry: entryRoute,
           }),
         )
 
@@ -238,6 +243,8 @@ function buildHelpCommand(entries: ManifestEntry[]): CommandModule {
 
         lines.push(description ? `  ${route.padEnd(width + 2)}${description}` : `  ${route}`)
       }
+
+      if (entryRoute !== 'help') lines.push('', `Running with no arguments invokes: ${entryRoute}`)
 
       ctx.io.write(lines.join('\n'))
 
@@ -261,9 +268,14 @@ function buildVersionCommand(): CommandModule {
 /**
  * Appends default `help`/`version` entries to `entries` (filtered by `config.skip`)
  * for any of those routes not already defined, overridden, or skipped. The `help`
- * listing reflects the final entry set, defaults included.
+ * listing reflects the final entry set, defaults included, and notes `entryRoute`
+ * when it overrides the default empty-argv target.
  */
-function withDefaultCommands(entries: ManifestEntry[], config: Config): ManifestEntry[] {
+function withDefaultCommands(
+  entries: ManifestEntry[],
+  config: Config,
+  entryRoute: string,
+): ManifestEntry[] {
   const skip = new Set(config.skip ?? []),
     existingRoutes = new Set(entries.map((entry) => entry.route.join('/'))),
     finalEntries = [...entries]
@@ -272,7 +284,7 @@ function withDefaultCommands(entries: ManifestEntry[], config: Config): Manifest
     finalEntries.push({
       route: ['help'],
       sourcePath: '<default:help>',
-      importer: () => Promise.resolve({ default: buildHelpCommand(finalEntries) }),
+      importer: () => Promise.resolve({ default: buildHelpCommand(finalEntries, entryRoute) }),
       meta: { description: 'Show available commands' },
     })
 
@@ -285,6 +297,47 @@ function withDefaultCommands(entries: ManifestEntry[], config: Config): Manifest
     })
 
   return finalEntries
+}
+
+/**
+ * Validates and normalizes `config.entry` into its raw slash-delimited route string
+ * (default `'help'`). Only checks shape (non-empty, no leading/trailing/double
+ * slashes) — existence against the resolved manifest is checked separately by
+ * `assertEntryResolves`, once the final entry set (including defaults) is known.
+ */
+function resolveEntryRoute(config: Config): string {
+  const raw = config.entry
+
+  if (raw === undefined) return 'help'
+
+  if (raw.trim().length === 0)
+    throw new Error('Invalid config.entry: must be a non-empty, non-whitespace string')
+
+  const segments = raw.split('/')
+
+  if (raw !== raw.trim() || segments.some((segment) => segment.length === 0))
+    throw new Error(
+      `Invalid config.entry: "${raw}" must not have leading, trailing, or double slashes`,
+    )
+
+  return raw
+}
+
+/**
+ * Ensures `entryRoute` names an existing, non-skipped route in the final entry
+ * set. Throws rather than silently falling through to "Unknown command", since
+ * a bad `config.entry` is a config authoring mistake, not a user input error.
+ */
+function assertEntryResolves(
+  entryRoute: string,
+  skip: Set<string>,
+  lookup: Map<string, ManifestEntry>,
+): void {
+  if (skip.has(entryRoute))
+    throw new Error(`Invalid config.entry: "${entryRoute}" is also listed in config.skip`)
+
+  if (!lookup.has(entryRoute))
+    throw new Error(`Invalid config.entry: "${entryRoute}" does not match any known route`)
 }
 
 async function dispatch(
@@ -305,11 +358,16 @@ async function dispatch(
   if (!config.bin) config.bin = config.name
 
   const skip = new Set(config.skip ?? []),
+    entryRoute = resolveEntryRoute(config),
     filteredEntries = manifest.entries.filter((entry) => !skip.has(entry.route.join('/'))),
-    entries = withDefaultCommands(filteredEntries, config),
-    argvForMatch = resolvedArgv.length > 0 ? resolvedArgv : ['help']
+    entries = withDefaultCommands(filteredEntries, config, entryRoute),
+    lookup = buildRouteLookup({ entries })
 
-  const match = resolveRoute(argvForMatch, buildRouteLookup({ entries }))
+  if (config.entry !== undefined) assertEntryResolves(entryRoute, skip, lookup)
+
+  const argvForMatch = resolvedArgv.length > 0 ? resolvedArgv : entryRoute.split('/')
+
+  const match = resolveRoute(argvForMatch, lookup)
 
   if (!match) {
     io.writeError(`Unknown command: ${resolvedArgv.join(' ') || '(none)'}`)

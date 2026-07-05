@@ -35,7 +35,8 @@ resolves to exit code `1`. There is no group-level help yet for a partial
 route like `app db` with no matching leaf command; only exact routes resolve,
 including the default `help` and `version` routes described in
 [Default Commands](default-commands.md). Running with no arguments at all is
-the one exception — it dispatches to `help` rather than erroring.
+the one exception — it dispatches to `config.entry` (default `'help'`)
+rather than erroring.
 
 ## Route arrays
 
@@ -45,5 +46,5 @@ Internally a route is a `string[]`: `commands/db/migrate.ts` becomes
 ## See also
 
 - [Manifest](manifest.md): how routes are built, from a file tree or an inline map
-- [Default Commands](default-commands.md): the `help`/`version` routes added automatically, and `config.skip`
+- [Default Commands](default-commands.md): the `help`/`version` routes added automatically, `config.skip`, and `config.entry`
 - [Core Module](../architecture/core.md): `buildRouteLookup` / `resolveRoute` implementation

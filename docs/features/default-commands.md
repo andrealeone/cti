@@ -27,8 +27,9 @@ my-cli help --json
 # {"name":"my-cli","version":"1.2.0","commands":[{"route":"deploy","description":"Deploy to an environment"}, ...]}
 ```
 
-Running the CLI with **no arguments at all** dispatches to `help` as well —
-there's no separate "no command given" error path.
+Running the CLI with **no arguments at all** dispatches to `help` by default
+as well — there's no separate "no command given" error path. This target is
+configurable via [`config.entry`](#configentry).
 
 ```bash
 my-cli
@@ -87,8 +88,49 @@ instead of the default output. `skip` applies uniformly to default commands,
 manifest entries, and discovered commands alike — it's a denylist evaluated
 before defaults are added, not a `help`/`version`-specific switch.
 
+## `config.entry`
+
+`Config.entry` overrides which route is dispatched to when the CLI is
+invoked with no arguments. It defaults to `'help'`:
+
+```typescript
+const config: Config = {
+  name: 'my-cli',
+  version: '1.0.0',
+  manifest: defineManifest({ deploy }),
+  entry: 'deploy',
+}
+```
+
+With the above, `my-cli` (no arguments) runs `deploy` instead of `help`.
+`entry` accepts the same slash-delimited route format as `skip`
+(e.g. `'admin/status'`).
+
+When `entry` overrides the default, the `help` listing notes it:
+
+```
+my-cli 1.0.0 (built with concise-ti)
+
+Commands:
+  deploy          Deploy to an environment
+  help            Show available commands
+  version         Show CLI version
+
+Running with no arguments invokes: deploy
+```
+
+`run()` validates `entry` eagerly, on every dispatch, regardless of the
+argv actually passed — a bad `entry` is a config authoring mistake, not
+user input, so it throws rather than degrading to `Unknown command`:
+
+- `entry` must be a non-empty, non-whitespace string with no leading,
+  trailing, or double slashes.
+- `entry` must name a route that exists in the resolved manifest (defaults
+  included) — no partial/group matches.
+- `entry` must not name a route that's also listed in `config.skip`.
+
 ## See also
 
 - [Manifest](manifest.md): how the manifest `help`/`version` are added to is built
 - [Command Routing](command-routing.md): how routes (including the defaults) resolve against argv
-- [API Reference](../reference/api-reference.md#config): `Config.skip`
+- [API Reference](../reference/api-reference.md#config): `Config.skip`, `Config.entry`

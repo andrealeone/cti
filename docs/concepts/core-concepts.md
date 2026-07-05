@@ -101,7 +101,7 @@ Given a config and (when discovering commands from disk) `import.meta`, `run()`:
    [Default Commands](../features/default-commands.md))
 3. Matches `argv` against the manifest using **longest-prefix routing**, so
    `users get 1` resolves to `users/get` with `['1']` left over as positionals
-   — empty `argv` resolves to `help`
+   — empty `argv` resolves to `config.entry` (default `'help'`)
 4. Lazily imports the matched command's module
 5. Parses and coerces the remaining argv against the command's `flags`
 6. Builds the `Context` and calls `command.run(ctx)`
@@ -125,6 +125,8 @@ command.run(ctx)  ──►  exit code
 
 Unknown routes and thrown errors are caught by `run()` itself: it writes to
 stderr and resolves to exit code `1` rather than throwing out of your entrypoint.
+A malformed or unresolvable `config.entry` is the exception — `run()` throws
+synchronously, since that's a config authoring mistake rather than user input.
 
 ### Flags and positionals
 
@@ -165,6 +167,7 @@ interface Config {
   bin?: string
   manifest?: Manifest
   skip?: string[]
+  entry?: string
 }
 ```
 
@@ -172,7 +175,9 @@ concise-ti doesn't impose a config _loader_: build the object however suits you 
 hand it to `run()`. It's available to every command via `ctx.config`.
 
 `skip` removes routes from dispatch entirely — default (`help`/`version`),
-manifest, or discovered alike. See [Default Commands](../features/default-commands.md).
+manifest, or discovered alike. `entry` overrides which route empty argv
+dispatches to (default `'help'`). See
+[Default Commands](../features/default-commands.md).
 
 `Config` isn't sealed — extend it with your own fields and pass that type to
 `run<ConfigType>()` to get a typed `ctx.config` in every command, with no
@@ -222,6 +227,6 @@ with no manifest to write by hand. That's the entire mental model.
 ### Next
 
 - **[Building Commands](../guides/building-commands.md)**: practical patterns
-- **[Default Commands](../features/default-commands.md)**: `help`, `version`, and `config.skip`
+- **[Default Commands](../features/default-commands.md)**: `help`, `version`, `config.skip`, and `config.entry`
 - **[Architecture](../architecture/core.md)**: how `run()` is implemented, module by module
 - **[API Reference](../reference/api-reference.md)**: every type and function

@@ -13,4 +13,10 @@ export interface Config {
    * commands alike — a skipped route behaves as if it were never registered.
    */
   skip?: string[]
+  /**
+   * Route dispatched to when the CLI is invoked with no arguments (slash-delimited,
+   * e.g. `'admin/status'`). Defaults to `'help'`. Must name an existing, non-skipped
+   * route in the resolved manifest — `run()` throws otherwise.
+   */
+  entry?: string
 }

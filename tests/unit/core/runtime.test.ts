@@ -576,6 +576,87 @@ describe('default commands', () => {
     expect(result).toBe(1)
     expect(customFn).not.toHaveBeenCalled()
   })
+
+  test('config.entry overrides the empty-argv target', async () => {
+    const deploy = mock(() => 0)
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['deploy'],
+          sourcePath: 'deploy.ts',
+          importer: () => Promise.resolve({ default: { run: deploy } }),
+        },
+      ],
+    }
+
+    const result = await run({ ...baseConfig(), manifest, entry: 'deploy' }, undefined, [])
+
+    expect(result).toBe(0)
+    expect(deploy).toHaveBeenCalled()
+  })
+
+  test('config.entry defaults to help when unset', async () => {
+    const { result, output } = await captureRun(baseConfig({ manifest: { entries: [] } }), [])
+
+    expect(result).toBe(0)
+    expect(output.join('')).toContain('built with concise-ti')
+  })
+
+  test('help notes a non-default config.entry', async () => {
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['deploy'],
+          sourcePath: 'deploy.ts',
+          importer: () => Promise.resolve({ default: { run: () => 0 } }),
+        },
+      ],
+    }
+
+    const { output } = await captureRun(baseConfig({ manifest, entry: 'deploy' }), ['help'])
+
+    expect(output.join('')).toContain('Running with no arguments invokes: deploy')
+  })
+
+  async function captureThrow(config: Config, argv: string[]): Promise<string> {
+    try {
+      await run(config, undefined, argv)
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error)
+    }
+
+    throw new Error('expected run() to throw')
+  }
+
+  test('config.entry throws when it names a nonexistent route', async () => {
+    const manifest: Manifest = { entries: [] }
+
+    const message = await captureThrow(baseConfig({ manifest, entry: 'missing' }), [])
+
+    expect(message).toContain('does not match any known route')
+  })
+
+  test('config.entry throws when it names a skipped route', async () => {
+    const manifest: Manifest = { entries: [] }
+
+    const message = await captureThrow(baseConfig({ manifest, entry: 'help', skip: ['help'] }), [])
+
+    expect(message).toContain('is also listed in config.skip')
+  })
+
+  test('config.entry throws on malformed route strings', async () => {
+    const manifest: Manifest = { entries: [] }
+
+    expect(await captureThrow(baseConfig({ manifest, entry: '' }), [])).toContain('non-empty')
+
+    expect(await captureThrow(baseConfig({ manifest, entry: '/deploy' }), [])).toContain(
+      'leading, trailing, or double slashes',
+    )
+
+    expect(await captureThrow(baseConfig({ manifest, entry: 'admin//status' }), [])).toContain(
+      'leading, trailing, or double slashes',
+    )
+  })
 })
 
 describe('run (directory discovery)', () => {

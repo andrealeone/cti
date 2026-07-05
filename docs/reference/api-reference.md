@@ -167,6 +167,7 @@ interface Config {
   bin?: string
   manifest?: Manifest
   skip?: string[]
+  entry?: string
 }
 ```
 
@@ -174,7 +175,10 @@ If `manifest` is set, `run()` uses it directly; otherwise it discovers one from
 `commandsDir` (default `'commands'`). `bin` defaults to `name`. `skip` is a
 list of slash-delimited routes (e.g. `['admin/reset']`) removed from dispatch
 entirely, whether they come from the manifest, discovery, or the default
-`help`/`version` commands described below. See
+`help`/`version` commands described below. `entry` is a slash-delimited route
+(e.g. `'admin/status'`) dispatched to when the CLI is invoked with no
+arguments, in place of the default `'help'`; `run()` throws if it names a
+route that doesn't exist or is also in `skip`. See
 [Default Commands](../features/default-commands.md).
 
 `Config` isn't sealed — a CLI can `extends Config` with its own fields (see
@@ -198,11 +202,13 @@ The dispatcher. Uses `config.manifest` if present, otherwise discovers one from
 case). Filters out any route listed in `config.skip`, then adds default `help`
 and `version` entries for those two routes if not already defined (see
 [Default Commands](../features/default-commands.md)). Resolves `argv`
-(defaults to `Bun.argv.slice(2)`, and treated as `['help']` when empty)
-against the resulting manifest, parses and coerces flags, builds `Context`,
-invokes the matched command, and resolves to the exit code: the command's
-numeric return, or `0`. On an unknown route or a thrown error, writes to
-stderr and resolves to `1`. When called with no explicit `argv` (the
+(defaults to `Bun.argv.slice(2)`, and treated as `config.entry` — default
+`'help'` — when empty) against the resulting manifest, parses and coerces
+flags, builds `Context`, invokes the matched command, and resolves to the
+exit code: the command's numeric return, or `0`. On an unknown route or a
+thrown error, writes to stderr and resolves to `1`. Throws synchronously
+(not a resolved `1`) if `config.entry` is malformed or doesn't resolve to
+an existing, non-skipped route. When called with no explicit `argv` (the
 entrypoint case), also sets `process.exitCode`.
 
 Pass an explicit type argument to type every command's `ctx.config` as your
