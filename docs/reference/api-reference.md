@@ -250,10 +250,11 @@ and [Core Module](../architecture/core.md#compileargv).
 #### `concise-ti init` / `concise-ti scaffold`
 
 Bin-only commands (`cli/commands/init.ts`, `cli/commands/scaffold.ts`), not
-exported from `concise-ti` and not part of the framework's own API surface —
-they scaffold _other_ projects, built on their own helpers under `cli/lib/`
-(`prompt.ts`, `github.ts`, `package-json.ts`, `detect.ts`,
-`scaffold-parse.ts`) rather than on `run()`/`Config`/`Context`. See
+exported from `concise-ti` — but built on the framework's real
+`ctx.io.prompt/confirm/select` (see [Prompts](../features/prompts.md)) rather
+than a separate implementation. Their own scaffolding logic lives under
+`cli/lib/init/` (`github.ts`, `package-json.ts`, `template.ts`) and
+`cli/lib/scaffold/` (`detect.ts`, `parse.ts`, `render.ts`). See
 [The `concise-ti` CLI](../features/cli.md) and its two guides,
 [Project Init](../guides/cli/project-init.md) and
 [Scaffolding Commands](../guides/cli/scaffolding-commands.md).

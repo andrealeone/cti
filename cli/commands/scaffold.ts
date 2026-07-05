@@ -3,18 +3,14 @@ import { dirname, join } from 'node:path'
 
 import { command } from '@/core/command'
 import type { Context } from '@/types/context'
-import { detectCli } from '../lib/detect'
-import { ask, closePrompts, confirm } from '../lib/prompt'
-import { parseCommandString, renderCommandModule, routeToFilePath } from '../lib/scaffold-parse'
+import { detectCli } from '../lib/scaffold/detect'
+import { parseCommandString, type ParsedCommand } from '../lib/scaffold/parse'
+import { renderCommandModule, routeToFilePath } from '../lib/scaffold/render'
 
 export default command({
   meta: { description: 'Generate a new command file for a discovery-based CLI' },
-  async run(ctx) {
-    try {
-      return await runScaffold(ctx)
-    } finally {
-      closePrompts()
-    }
+  run(ctx) {
+    return runScaffold(ctx)
   },
 })
 
@@ -35,14 +31,13 @@ async function runScaffold(ctx: Context): Promise<number> {
     return 1
   }
 
-  ctx.io.write(ctx.io.color('\n◆ concise-ti · scaffold', 'cyan'))
-  ctx.io.write('  Generate a new command file for this discovery-based CLI.\n')
+  ctx.io.write('\nGenerate a new command file for this discovery-based CLI.\n')
 
-  const commandString = await ask(
+  const commandString = await ctx.io.prompt(
     'What should the command look like? (e.g. "cli tag add <name> --force")',
   )
 
-  let parsed: ReturnType<typeof parseCommandString>
+  let parsed: ParsedCommand
   try {
     parsed = parseCommandString(commandString)
   } catch (error) {
@@ -50,21 +45,21 @@ async function runScaffold(ctx: Context): Promise<number> {
     return 1
   }
 
-  const description = await ask('Command description?')
+  const description = await ctx.io.prompt('Command description?')
 
   const relativePath = routeToFilePath(parsed.route)
   const filePath = join(detected.commandsDir!, relativePath)
 
   printOverview(ctx, parsed, description, filePath)
 
-  const proceed = await confirm('Create this command?', true)
+  const proceed = await ctx.io.confirm('Create this command?', true)
   if (!proceed) {
     ctx.io.write('Aborted, nothing was written.')
     return 0
   }
 
   if (existsSync(filePath)) {
-    const overwrite = await confirm(`"${relativePath}" already exists. Overwrite?`, false)
+    const overwrite = await ctx.io.confirm(`"${relativePath}" already exists. Overwrite?`, false)
     if (!overwrite) {
       ctx.io.write('Aborted, nothing was written.')
       return 0
@@ -80,7 +75,7 @@ async function runScaffold(ctx: Context): Promise<number> {
 
 function printOverview(
   ctx: Context,
-  parsed: ReturnType<typeof parseCommandString>,
+  parsed: ParsedCommand,
   description: string,
   filePath: string,
 ): void {

@@ -7,7 +7,7 @@ import {
   withDependency,
   withFixedBuildScript,
   withName,
-} from '../../../cli/lib/package-json'
+} from '../../../../cli/lib/init/package-json'
 
 describe('createPackageJson', () => {
   test('produces a minimal package.json with a cli script', () => {

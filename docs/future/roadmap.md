@@ -15,7 +15,7 @@ Stabilise the core framework:
 - [Done] I/O color output with TTY / NO_COLOR detection
 - [Done] `concise-ti compile`: makes `commandsDir` discovery work in `bun build --compile` binaries
 - [Done] Default `help` and `version` commands, generated from the manifest and `Config`, overridable and skippable via `config.skip`
-- [In Progress] Real `prompt` / `confirm` / `select` implementations (currently non-interactive stubs)
+- [Done] Real `prompt` / `confirm` / `select` implementations, also backing `concise-ti init`/`scaffold`
 - [In Progress] Real spinner animation (currently a no-op stub)
 - [In Progress] Complete documentation
 

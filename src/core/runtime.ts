@@ -10,6 +10,7 @@ import { parseAndCoerce } from '@/core/parser'
 import { discoverManifest } from '@/core/discovery'
 import { buildRouteLookup, resolveRoute } from '@/core/router'
 import { createIo, createLogger } from '@/io/index'
+import { closePrompts } from '@/io/prompt'
 
 /**
  * Build a Manifest from a flat map of `route -> command module`.
@@ -198,6 +199,12 @@ async function invokeCommand(
     io.writeError(`Error: ${error instanceof Error ? error.message : String(error)}`)
 
     return 1
+  } finally {
+    // Once ctx.io.prompt/confirm/select read from a real readline interface
+    // instead of resolving instantly, leaving it open after dispatch would
+    // keep the process alive (holding a listener on stdin) whether or not
+    // this particular command ever prompted.
+    closePrompts()
   }
 }
 

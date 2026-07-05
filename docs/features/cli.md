@@ -19,16 +19,13 @@ Full walkthroughs live in **[guides/cli/](../guides/cli/)**:
 [Project Init](../guides/cli/project-init.md) and
 [Scaffolding Commands](../guides/cli/scaffolding-commands.md).
 
-## Why a separate prompt implementation
+## Built on the same `ctx.io` prompts as any command
 
-`init` and `scaffold` are interactive wizards: they ask questions and read
-real answers from stdin. `ctx.io.prompt/confirm/select` (the primitives your
-own commands get) are non-interactive stubs today — see
-[Prompts](prompts.md) — so the bin's wizards are built on their own small
-helper, `cli/lib/prompt.ts`, instead. It's deliberately not the same code
-path: a framework consumer's commands must keep behaving exactly the same
-once `ctx.io.prompt` is implemented for real, so this wizard-only UI doesn't
-reuse or influence that contract in either direction.
+`init` and `scaffold` are interactive wizards, and they're built on exactly
+the same `ctx.io.prompt/confirm/select` primitives any concise-ti command
+gets — see [Prompts](prompts.md). There's no separate wizard-only prompt
+implementation: the bin is just another concise-ti CLI, dispatched through
+the same `run()`.
 
 ## Why templates are fetched from GitHub
 
@@ -48,9 +45,9 @@ each file's content), always from `main`. This means:
 
 Both wizards need to tell a manifest-based CLI (`defineManifest`) from a
 discovery-based one (`commandsDir`) apart. There's no AST tooling in this
-dependency-free codebase, so detection (`cli/lib/detect.ts`) is a regex
-heuristic over the entrypoint's source — good enough for CLIs written the
-conventional way, not a real static analysis. See
+dependency-free codebase, so detection (`cli/lib/scaffold/detect.ts`) is a
+regex heuristic over the entrypoint's source — good enough for CLIs written
+the conventional way, not a real static analysis. See
 [Scaffolding Commands](../guides/cli/scaffolding-commands.md) for what it
 looks for.
 
@@ -58,4 +55,4 @@ looks for.
 
 - [Manifest](manifest.md): `defineManifest` vs. `discoverManifest`, and how `compile` works around a compiled binary's virtual filesystem
 - [Compiling a Binary](../guides/compiling-a-binary.md): which compile command a generated project needs
-- [Prompts](prompts.md): why `ctx.io.prompt/confirm/select` are stubs, and why the bin's wizards don't use them
+- [Prompts](prompts.md): the real `ctx.io.prompt/confirm/select` implementation these wizards are built on

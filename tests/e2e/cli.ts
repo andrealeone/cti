@@ -28,6 +28,14 @@ const usersList: CommandModule = {
   },
 }
 
+const greet: CommandModule = {
+  meta: { description: 'Greet by prompting for a name' },
+  async run(ctx) {
+    const name = await ctx.io.prompt('Name?')
+    ctx.io.write(`Hello, ${name || 'stranger'}!`)
+  },
+}
+
 const config: Config = {
   name: 'concise-ti',
   version: '1.0.0',
@@ -35,6 +43,7 @@ const config: Config = {
     ping,
     users,
     'users/list': usersList,
+    greet,
   }),
 }
 

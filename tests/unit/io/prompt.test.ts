@@ -1,27 +1,27 @@
 import { describe, test, expect } from 'bun:test'
-import { prompt, confirm, select } from '@/io/prompt'
+import { closePrompts } from '@/io/prompt'
 
-// NOTE: prompt/confirm/select are currently non-interactive stubs in src/io/prompt.ts.
-// These tests pin their documented stub behaviour so a future real implementation
-// is a deliberate, test-visible change rather than a silent one.
-describe('prompt (stub)', () => {
-  test('resolves to an empty string', async () => {
-    expect(await prompt('Name?')).toBe('')
+/**
+ * `prompt`/`confirm`/`select` now read real lines from `process.stdin` (see
+ * src/io/prompt.ts), so they're no longer pure functions a unit test can
+ * exercise in-process without a real stdin stream to feed. Their actual
+ * behavior — reading a piped answer, falling back on EOF, and the
+ * process-exit fix `closePrompts()` provides — is covered end-to-end in
+ * tests/e2e/cli.e2e.test.ts's "ctx.io.prompt" block, which spawns a real CLI
+ * process with real stdin. `closePrompts` itself has no stdin dependency, so
+ * its no-op/idempotent behavior is tested here.
+ */
+describe('closePrompts', () => {
+  test('is a no-op when no prompt has read from stdin yet', () => {
+    expect(() => {
+      closePrompts()
+    }).not.toThrow()
   })
-})
 
-describe('confirm (stub)', () => {
-  test('defaults to false when no fallback is given', async () => {
-    expect(await confirm('Sure?')).toBe(false)
-  })
-
-  test('returns the provided fallback', async () => {
-    expect(await confirm('Sure?', true)).toBe(true)
-  })
-})
-
-describe('select (stub)', () => {
-  test('returns the first choice', async () => {
-    expect(await select('Pick', ['a', 'b', 'c'])).toBe('a')
+  test('is idempotent', () => {
+    closePrompts()
+    expect(() => {
+      closePrompts()
+    }).not.toThrow()
   })
 })

@@ -21,9 +21,12 @@ tests/
 
 Unit tests mirror `src/` one-to-one: each module gets a sibling `*.test.ts`
 (`src/core/parser.ts` → `tests/unit/core/parser.test.ts`). The modules are small
-and mostly pure, so these tests are fast and direct. `prompt`/`spinner` are
-currently non-interactive stubs; their tests pin the stub contract so a future
-real implementation is a deliberate, test-visible change.
+and mostly pure, so these tests are fast and direct. `spinner` is currently a
+non-interactive stub; its tests pin the stub contract so a future real
+implementation is a deliberate, test-visible change. `prompt` is real (reads
+from `process.stdin`), so it isn't pure enough for an in-process unit test to
+exercise meaningfully — its behavior is covered end-to-end instead (see E2E
+below).
 
 #### E2E
 

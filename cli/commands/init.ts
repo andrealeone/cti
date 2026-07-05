@@ -1,81 +1,23 @@
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs'
-import { basename, dirname, join } from 'node:path'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync } from 'node:fs'
+import { basename, join } from 'node:path'
 
 import { command } from '@/core/command'
 import type { Context } from '@/types/context'
-import { version } from '../../package.json' with { type: 'json' }
-import { ask, closePrompts, select } from '../lib/prompt'
-import { downloadDemo, listDemoNames } from '../lib/github'
-import {
-  createPackageJson,
-  renderPackageJson,
-  withCliScript,
-  withDependency,
-  withFixedBuildScript,
-  withName,
-  type PackageJson,
-} from '../lib/package-json'
+import { listDemoNames } from '../lib/init/github'
+import { applyPackageJson, applyTemplate, isEmptyDir, type TemplateMode } from '../lib/init/template'
 
 const MANIFEST_DEMO = 'hello-world-with-manifest'
 const DISCOVERY_DEMO = 'hello-world'
 
-/** Downloads `demo` into a temp dir, then copies it into `targetDir`. When
- * `mode` is `'current'`, the template's own `package.json`/`readme.md` are
- * skipped: an existing project's `package.json` is patched, not replaced. */
-async function applyTemplate(
-  demo: string,
-  targetDir: string,
-  mode: 'new' | 'current',
-): Promise<string[]> {
-  const tmp = mkdtempSync(join(tmpdir(), 'concise-ti-init-'))
+const LOCATIONS = [
+  'Add a CLI to the current project',
+  'Create a new project folder',
+] as const
 
-  try {
-    const files = await downloadDemo(demo, tmp),
-      skip = new Set(mode === 'current' ? ['package.json', 'readme.md'] : [])
-
-    for (const relativePath of files) {
-      if (skip.has(relativePath.toLowerCase())) continue
-
-      const destination = join(targetDir, relativePath)
-
-      mkdirSync(dirname(destination), { recursive: true })
-      copyFileSync(join(tmp, relativePath), destination)
-    }
-
-    return files
-  } finally {
-    rmSync(tmp, { recursive: true, force: true })
-  }
-}
-
-function applyPackageJson(targetDir: string, projectName: string): void {
-  const pkgPath = join(targetDir, 'package.json')
-
-  let pkg: PackageJson = existsSync(pkgPath)
-    ? (JSON.parse(readFileSync(pkgPath, 'utf8')) as PackageJson)
-    : createPackageJson(projectName)
-
-  pkg = withName(pkg, projectName)
-  pkg = withCliScript(pkg)
-  pkg = withDependency(pkg, 'concise-ti', `^${version}`)
-  pkg = withFixedBuildScript(pkg)
-
-  writeFileSync(pkgPath, renderPackageJson(pkg))
-}
-
-function isEmptyDir(dir: string): boolean {
-  return !existsSync(dir) || readdirSync(dir).length === 0
-}
+const STYLES = [
+  'Recommended: command auto-discovery — commands live in commands/',
+  'Single-file, manifest-based configuration — everything in main.ts',
+] as const
 
 interface InitFlags {
   'from-demo'?: string
@@ -89,27 +31,22 @@ export default command<InitFlags>({
       description: 'Skip the wizard and scaffold a new folder from a /demos template',
     },
   },
-  async run(ctx) {
-    try {
-      if (ctx.flags['from-demo']) return await runFromDemo(ctx, ctx.flags['from-demo'])
+  run(ctx) {
+    if (ctx.flags['from-demo']) return runFromDemo(ctx, ctx.flags['from-demo'])
 
-      return await runWizard(ctx)
-    } finally {
-      closePrompts()
-    }
+    return runWizard(ctx)
   },
 })
 
-async function runFromDemo(ctx: Context<InitFlags>, demo: string) {
+async function runFromDemo(ctx: Context<InitFlags>, demo: string): Promise<number> {
   const available = await listDemoNames()
 
   if (!available.includes(demo)) {
     ctx.io.writeError(`Unknown demo "${demo}". Available demos: ${available.join(', ')}`)
-
     return 1
   }
 
-  const projectName = await ask('Project name?', demo),
+  const projectName = (await ctx.io.prompt(`Project name? (${demo})`)) || demo,
     targetDir = join(ctx.cwd, projectName)
 
   if (!isEmptyDir(targetDir)) {
@@ -127,20 +64,18 @@ async function runFromDemo(ctx: Context<InitFlags>, demo: string) {
   return 0
 }
 
-async function runWizard(ctx: Context<InitFlags>) {
-  ctx.io.write(ctx.io.color('\n◆ concise-ti · init', 'cyan'))
-  ctx.io.write('  A quick wizard to get a new CLI on its feet.\n')
+async function runWizard(ctx: Context<InitFlags>): Promise<number> {
+  ctx.io.write('\nA quick wizard to get a new CLI on its feet.\n')
 
-  const location = await select('Where should this CLI live?', [
-    { value: 'current', label: 'Add a CLI to the current project', hint: ctx.cwd },
-    { value: 'new', label: 'Create a new project folder' },
-  ] as const)
+  const location = await ctx.io.select('Where should this CLI live?', LOCATIONS)
 
   let targetDir = ctx.cwd
   let projectName = basename(ctx.cwd)
+  let mode: TemplateMode = 'current'
 
-  if (location === 'new') {
-    projectName = await ask('Project name?', 'my-cli')
+  if (location === LOCATIONS[1]) {
+    mode = 'new'
+    projectName = (await ctx.io.prompt('Project name? (my-cli)')) || 'my-cli'
     targetDir = join(ctx.cwd, projectName)
 
     if (!isEmptyDir(targetDir)) {
@@ -154,28 +89,16 @@ async function runWizard(ctx: Context<InitFlags>) {
     return 1
   }
 
-  const style = await select('Command style?', [
-    {
-      value: 'discovery',
-      label: 'Recommended: command auto-discovery',
-      hint: 'drop files into commands/',
-    },
-    {
-      value: 'manifest',
-      label: 'Single-file, manifest-based configuration',
-      hint: 'everything in main.ts',
-    },
-  ] as const)
-
-  const demo = style === 'discovery' ? DISCOVERY_DEMO : MANIFEST_DEMO
+  const style = await ctx.io.select('Command style?', STYLES)
+  const demo = style === STYLES[0] ? DISCOVERY_DEMO : MANIFEST_DEMO
 
   mkdirSync(targetDir, { recursive: true })
   ctx.io.write(`\nFetching "${demo}" from GitHub...`)
 
-  await applyTemplate(demo, targetDir, location)
+  await applyTemplate(demo, targetDir, mode)
   applyPackageJson(targetDir, projectName)
 
-  printSummary(ctx, location === 'new' ? projectName : undefined)
+  printSummary(ctx, mode === 'new' ? projectName : undefined)
   return 0
 }
 

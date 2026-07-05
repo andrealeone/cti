@@ -13,10 +13,15 @@ import { join } from 'node:path'
 const ENTRY = join(import.meta.dir, 'cli.ts')
 const hasEntry = existsSync(ENTRY)
 
-async function runCli(args: string[], env?: Record<string, string>) {
+async function runCli(
+  args: string[],
+  options: { env?: Record<string, string>; stdin?: string } = {},
+) {
   const proc = Bun.spawn(['bun', 'run', ENTRY, ...args], {
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, ...env },
+    stdin: options.stdin !== undefined ? new TextEncoder().encode(options.stdin) : 'ignore',
+    stdout: 'pipe',
+    stderr: 'pipe',
+    env: { ...process.env, ...options.env },
   })
 
   const stdout = await new Response(proc.stdout).text()
@@ -67,5 +72,33 @@ describe('command dispatch', () => {
     const { stdout, exitCode } = await runCli([])
     expect(stdout.includes('built with concise-ti')).toBe(true)
     expect(exitCode).toBe(0)
+  })
+})
+
+describe('ctx.io.prompt', () => {
+  test('reads a real answer from piped stdin', async () => {
+    const { stdout, exitCode } = await runCli(['greet'], { stdin: 'Alice\n' })
+
+    expect(stdout).toContain('Hello, Alice!')
+    expect(exitCode).toBe(0)
+  })
+
+  test('falls back to empty when stdin closes without an answer', async () => {
+    const { stdout, exitCode } = await runCli(['greet'], { stdin: '' })
+
+    expect(stdout).toContain('Hello, stranger!')
+    expect(exitCode).toBe(0)
+  })
+
+  test('does not hang the process after prompting (closePrompts is called)', async () => {
+    const start = Date.now()
+    const { exitCode } = await runCli(['greet'], { stdin: 'Bob\n' })
+
+    expect(exitCode).toBe(0)
+    // Regression check: before closePrompts() was wired into invokeCommand's
+    // finally block, an open readline interface on stdin kept the process
+    // alive after dispatch finished. A generous bound catches a real hang
+    // (which would otherwise block forever) without being flaky on CI.
+    expect(Date.now() - start).toBeLessThan(5000)
   })
 })

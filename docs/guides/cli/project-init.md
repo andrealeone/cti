@@ -1,11 +1,10 @@
 # Project Init
 
 `concise-ti init` is a wizard that gets a new CLI on its feet, or adds one to
-a project you already have. It reads real answers from stdin (see
-[The `concise-ti` CLI](../../features/cli.md#why-a-separate-prompt-implementation)
-for why this isn't built on `ctx.io.prompt`), and needs network access, since
-its templates are fetched live from GitHub (see
-[why](../../features/cli.md#why-templates-are-fetched-from-github)).
+a project you already have. It's built on the same `ctx.io.prompt/confirm/select`
+primitives any concise-ti command gets (see [Prompts](../../features/prompts.md)),
+and needs network access, since its templates are fetched live from GitHub
+(see [why](../../features/cli.md#why-templates-are-fetched-from-github)).
 
 ```bash
 bunx concise-ti init

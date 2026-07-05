@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
-import { detectCli, findEntrypoint } from '../../../cli/lib/detect'
+import { detectCli, findEntrypoint } from '../../../../cli/lib/scaffold/detect'
 
 function tmpProject(): string {
   return mkdtempSync(join(tmpdir(), 'concise-ti-detect-'))

@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
-import { downloadDemo, listDemoNames } from '../../../cli/lib/github'
+import { downloadDemo, listDemoNames } from '../../../../cli/lib/init/github'
 
 /**
  * `cli/lib/github.ts` talks to the real GitHub API by design (see its own
