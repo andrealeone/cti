@@ -1,8 +1,8 @@
 {
-  "name": "cti",
-  "version": "1.0.0-rc.0",
+  "name": "concise-ti",
+  "version": "0.1.0-rc.0",
   "author": "Andrea Leone <git@leone.gdn>",
-  "description": "Bun-Native TypeScript CLI Framework",
+  "description": "Concise Terminal Interface",
   "license": "MIT",
   "homepage": "https://github.com/andrealeone/cti#readme",
   "repository": {
