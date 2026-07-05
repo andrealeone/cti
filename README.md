@@ -11,22 +11,22 @@ Installing a CLI framework should feel like installing Next.js, not like copying
 There are no configuration files to maintain and no wiring code to write. The framework handles the plumbing, so the developer writes only what each command does.
 
 ```
-                 ┌──────────────────────────┐
-   argv    ───►  │   run(config, meta)      │
-                 │   the only line you write │
-                 └────────────┬─────────────┘
+                 ┌───────────────────────────┐
+   argv    ───►  │   run(config, meta)       │
+                 │   The only line you write │
+                 └────────────┬──────────────┘
                               │
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
-        resolve route   parse & coerce   build context
-       (commands/ tree)   (your flags)   (io, cwd, env…)
+        Resolve route   Parse & coerce   Build context
+       (commands/ tree)  (your flags)   (io, cwd, env…)
               │               │               │
               └───────────────┴───────┬───────┘
-                                       ▼
-                              your command's run()
-                                       │
-                                       ▼
-                                  exit code
+                                      ▼
+                              Your command's run()
+                                      │
+                                      ▼
+                                  Exit code
 ```
 
 <br/>
@@ -126,20 +126,18 @@ bun build ./main.ts --compile --outfile dist/my-cli
 
 ## Documentation
 
-The example above is just a taste. Full docs live in [`/docs`](docs); pick a
-column below based on what you're trying to do:
+The example above is just a taste. Full docs live in [`/docs`](docs); pick the
+one below based on what you're trying to do:
 
-| I want to...                     | Read                                                                                                                     |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Get a working CLI in 5 minutes    | [Quick Start](docs/getting-started/quickstart.md)                                                                          |
-| Understand the mental model       | [Core Concepts](docs/concepts/core-concepts.md)                                                                            |
-| Write commands well                | [Building Commands](docs/guides/building-commands.md), [Examples](docs/guides/examples.md), [Demos](docs/guides/demos.md) |
-| Look up a flag/routing/I/O detail | [Features](docs/features/), one page per capability                                                                      |
-| See how CTI is built internally   | [Architecture](docs/architecture/core.md): runtime, router, parser, I/O, types                                            |
-| Look up an exact type or function | [API Reference](docs/reference/api-reference.md)                                                                           |
-| Know why CTI is shaped this way   | [Vision](docs/principles/vision.md) & [Philosophy](docs/principles/philosophy.md)                                          |
-| Contribute or report a bug        | [Contributing Guide](docs/contributing/guide.md), [Testing](docs/contributing/testing.md)                                  |
-| Know what's coming next           | [Roadmap](docs/future/roadmap.md)                                                                                          |
+- **Get a working CLI in two minutes** — [Quick Start](docs/getting-started/quickstart.md)
+- **Understand the mental model** — [Core Concepts](docs/concepts/core-concepts.md)
+- **Write commands well** — [Building Commands](docs/guides/building-commands.md), [Examples](docs/guides/examples.md), [Demos](docs/guides/demos.md)
+- **Look up a flag/routing/I/O detail** — [Features](docs/features/), one page per capability
+- **See how CTI is built internally** — [Architecture](docs/architecture/core.md): runtime, router, parser, I/O, types
+- **Look up an exact type or function** — [API Reference](docs/reference/api-reference.md)
+- **Know why CTI is shaped this way** — [Vision](docs/principles/vision.md) & [Philosophy](docs/principles/philosophy.md)
+- **Contribute or report a bug** — [Contributing Guide](docs/contributing/guide.md), [Testing](docs/contributing/testing.md)
+- **Know what's coming next** — [Roadmap](docs/future/roadmap.md)
 
 Start at [`docs/README.md`](docs/README.md) for the full index.
 
