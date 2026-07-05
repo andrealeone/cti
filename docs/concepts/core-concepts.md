@@ -163,7 +163,7 @@ interface Config {
 }
 ```
 
-concise-ti doesn't impose a config *loader*: build the object however suits you and
+concise-ti doesn't impose a config _loader_: build the object however suits you and
 hand it to `run()`. It's available to every command via `ctx.config`.
 
 ### I/O

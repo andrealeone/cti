@@ -30,8 +30,13 @@ and guarantees every command in a run shares the same instance.
 
 ```typescript
 const ANSI_COLORS: Record<Color, string> = {
-  red: '\x1b[31m', green: '\x1b[32m', yellow: '\x1b[33m',
-  blue: '\x1b[34m', magenta: '\x1b[35m', cyan: '\x1b[36m', gray: '\x1b[90m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
 }
 
 export function colorize(text: string, color: Color): string {
@@ -84,7 +89,9 @@ designed so real implementations slot in without changing call sites; see
 export function createLogger(): Logger {
   return {
     level: 'info',
-    debug: (...args) => { if (process.env.DEBUG) console.log('[DEBUG]', ...args) },
+    debug: (...args) => {
+      if (process.env.DEBUG) console.log('[DEBUG]', ...args)
+    },
     info: (...args) => console.log('[INFO]', ...args),
     warn: (...args) => console.warn('[WARN]', ...args),
     error: (...args) => console.error('[ERROR]', ...args),

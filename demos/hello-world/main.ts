@@ -16,4 +16,9 @@ const goodbye = command({
   },
 })
 
-void run({ name: 'hello-world', bin: 'hello', version: '1.0.0', manifest: defineManifest({ hello, goodbye }) })
+void run({
+  name: 'hello-world',
+  bin: 'hello',
+  version: '1.0.0',
+  manifest: defineManifest({ hello, goodbye }),
+})

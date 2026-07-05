@@ -15,7 +15,11 @@ casting in handlers.
 Passed through unchanged:
 
 ```typescript
-flags: { name: { type: 'string' } }
+flags: {
+  name: {
+    type: 'string'
+  }
+}
 // --name Alice → ctx.flags.name === 'Alice'
 ```
 
@@ -24,7 +28,11 @@ flags: { name: { type: 'string' } }
 Converted with `Number(value)`; throws if the result is `NaN`:
 
 ```typescript
-flags: { count: { type: 'number' } }
+flags: {
+  count: {
+    type: 'number'
+  }
+}
 // --count 42  → ctx.flags.count === 42 (number)
 // --count abc → Error: Invalid number: "abc"
 ```
@@ -37,7 +45,11 @@ exits with code `1`, so your handler never sees the bad value.
 Already boolean coming out of `parseArgs`; passed through as-is:
 
 ```typescript
-flags: { verbose: { type: 'boolean' } }
+flags: {
+  verbose: {
+    type: 'boolean'
+  }
+}
 // --verbose      → ctx.flags.verbose === true
 // (no flag)      → ctx.flags.verbose === undefined, unless a default is set
 ```

@@ -41,7 +41,7 @@ Builds a `Manifest` from a flat `{ route: CommandModule }` map:
 
 ```typescript
 const manifest = defineManifest({
-  hello: helloCommand,
+  'hello': helloCommand,
   'users/list': usersListCommand,
   'users/get': usersGetCommand,
 })
@@ -108,14 +108,14 @@ command, because the other ninety-nine are never touched.
 
 ### Quick reference
 
-| Function              | Module         | Purpose                                        |
-| ---------------------- | -------------- | ----------------------------------------------- |
-| `run()`                | `runtime.ts`   | Main dispatcher: argv → command → exit code      |
-| `defineManifest()`     | `runtime.ts`   | Build a manifest from an in-memory route map     |
-| `discoverManifest()`   | `discovery.ts` | Build a manifest by scanning a directory         |
-| `buildRouteLookup()`   | `router.ts`    | Convert a manifest into a fast lookup map        |
-| `resolveRoute()`       | `router.ts`    | Longest-prefix route matching                    |
-| `parseAndCoerce()`     | `parser.ts`    | Parse argv and coerce to typed flags             |
+| Function             | Module         | Purpose                                      |
+| -------------------- | -------------- | -------------------------------------------- |
+| `run()`              | `runtime.ts`   | Main dispatcher: argv → command → exit code  |
+| `defineManifest()`   | `runtime.ts`   | Build a manifest from an in-memory route map |
+| `discoverManifest()` | `discovery.ts` | Build a manifest by scanning a directory     |
+| `buildRouteLookup()` | `router.ts`    | Convert a manifest into a fast lookup map    |
+| `resolveRoute()`     | `router.ts`    | Longest-prefix route matching                |
+| `parseAndCoerce()`   | `parser.ts`    | Parse argv and coerce to typed flags         |
 
 ### Related
 

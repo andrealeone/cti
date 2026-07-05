@@ -28,14 +28,14 @@ run(config).then((code) => process.exit(code))
 
 The `Context` passed to every command exposes:
 
-| Field             | Description                                              |
-| ----------------- | -------------------------------------------------------- |
-| `ctx.positionals` | non-flag arguments after the route                       |
-| `ctx.flags`       | parsed + coerced flags (per the command's `flags` spec)  |
-| `ctx.env`         | environment variables                                    |
-| `ctx.cwd`         | working directory                                        |
+| Field             | Description                                             |
+| ----------------- | ------------------------------------------------------- |
+| `ctx.positionals` | non-flag arguments after the route                      |
+| `ctx.flags`       | parsed + coerced flags (per the command's `flags` spec) |
+| `ctx.env`         | environment variables                                   |
+| `ctx.cwd`         | working directory                                       |
 | `ctx.io`          | `write` / `writeError` / `color` / `spinner` / `prompt` |
-| `ctx.logger`      | `debug` / `info` / `warn` / `error`                      |
+| `ctx.logger`      | `debug` / `info` / `warn` / `error`                     |
 
 > Routes are slash-delimited in `defineManifest` (`'users/list'`), and the router
 > matches the **longest** prefix, so `users get 1` resolves to the `users/get`
@@ -47,15 +47,15 @@ The `Context` passed to every command exposes:
 
 ## Demos
 
-| Demo             | Demonstrates                                                             | Pattern              |
-| ---------------- | ------------------------------------------------------------------------ | -------------------- |
-| `hello-world`    | Minimal command + dispatcher                                             | Inline manifest      |
-| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner | Inline manifest      |
-| `project-init`   | Flags + filesystem scaffolding from `ctx.cwd`                            | Inline manifest      |
+| Demo             | Demonstrates                                                                                                                                                                                  | Pattern              |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `hello-world`    | Minimal command + dispatcher                                                                                                                                                                  | Inline manifest      |
+| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner                                       | Inline manifest      |
+| `project-init`   | Flags + filesystem scaffolding from `ctx.cwd`                                                                                                                                                 | Inline manifest      |
 | `api-client`     | Nested routes (`users/list`), **`index.ts` route collapsing**, env-driven config, **custom `ctx.config` fields**, **explicit `command<F>()` generics**, `args[]` specs, **command discovery** | File-based discovery |
-| `todo-app`       | Multiple commands, positionals, **`args[]` specs**, **`meta.aliases`/`meta.hidden`**, persisted state, **command discovery** | File-based discovery |
-| `data-transform` | Reading stdin, format conversion (json/csv/table), **command discovery** | File-based discovery |
-| `interactive-io` | **Logger**, **prompt/confirm/select**, spinners, colors, **stdin**, **`ctx.io.isTTY` detection** | File-based discovery |
+| `todo-app`       | Multiple commands, positionals, **`args[]` specs**, **`meta.aliases`/`meta.hidden`**, persisted state, **command discovery**                                                                  | File-based discovery |
+| `data-transform` | Reading stdin, format conversion (json/csv/table), **command discovery**                                                                                                                      | File-based discovery |
+| `interactive-io` | **Logger**, **prompt/confirm/select**, spinners, colors, **stdin**, **`ctx.io.isTTY` detection**                                                                                              | File-based discovery |
 
 ## Running a demo
 

@@ -92,8 +92,8 @@ Be specific about what was wrong and what's expected:
 
 ```typescript
 // Clear and actionable
-if (value.length < 1) return ctx.io.writeError('Name must not be empty'), 1
+if (value.length < 1) return (ctx.io.writeError('Name must not be empty'), 1)
 
 // Less helpful
-if (value.length < 1) return ctx.io.writeError('Invalid input'), 1
+if (value.length < 1) return (ctx.io.writeError('Invalid input'), 1)
 ```
