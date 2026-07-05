@@ -1,14 +1,14 @@
 <h1 align="center">concise-ti</h1>
 
-concise-ti (**Concise Terminal Interface**, codename Watson) is a lightweight, dependency-free, Bun-native TypeScript framework for building command-line tools. Install it as a dependency, call it once from your entrypoint, and start writing command files. concise-ti discovers them, parses their arguments, routes to them, and renders their output.
+**Concise Terminal Interface** is a lightweight, dependency-free, Bun-native TypeScript framework for building command-line tools. Install it as a dependency, call it once from your entrypoint, and start writing command files. The tool automatically discovers them, parses their arguments, routes to them, and renders their output.
 
 <br/>
 
 ### Vision
 
-Installing a CLI framework should feel like installing Next.js, not like copying a starter kit. You install concise-ti, write an entrypoint that's one line long, drop files into a `commands` directory, and you have a working, typed, compilable CLI. Everything between the argument vector and your handler is concise-ti's job, not yours.
+Managing a command-line interface should feel like working with Next.js, not starting with a boilerplate kit. Install concise-ti and you're ready to go. Write an entrypoint that's one line long, drop files into a `/commands` directory, and you have a working, typed, compilable CLI. Everything between the argument vector and your handler is concise-ti's job, not yours.
 
-There are no configuration files to maintain and no wiring code to write. The framework handles the plumbing, so the developer writes only what each command does.
+There are no configuration files and no wiring code to handle. The framework handles all the plumbing.
 
 ```
                  ┌───────────────────────────┐
@@ -33,10 +33,10 @@ There are no configuration files to maintain and no wiring code to write. The fr
 
 ### Features
 
-- **No Boilerplate** No manual imports or routing logic, just files in a `commands` directory.
+- **No Boilerplate** No manual imports or routing logic, just create files in the `/commands` directory or define your own.
 - **Typed Arguments** Flags and positionals are declared once and arrive in the handler function already parsed, coerced, and typed.
 - **Zero-Config** Auto-discover commands from the filesystem, leaving you nothing to wire up by hand.
-- **Lightweight** No runtime dependencies: the framework is the only thing in your `node_modules`.
+- **Lightweight** No runtime dependencies: the framework is the only thing in your node modules.
 - **Bun-Optimized** Lean on Bun's speed and native TypeScript.
 - **Compiles to Binary** Ship your CLI as a single standalone executable with `bun build --compile`.
 
@@ -63,6 +63,8 @@ new-cli/
     └── fib.ts   ← app fib
 ```
 
+<br/>
+
 Create `commands/fib.ts`:
 
 ```typescript
@@ -88,6 +90,8 @@ export default command({
 The `flags` block is enough to get a typed `--sequence` toggle in `ctx.flags`.
 No manual parsing, no wiring it into a parser yourself.
 
+<br/>
+
 Create `main.ts`:
 
 ```typescript
@@ -104,6 +108,8 @@ Add a second file and `app second-command` exists with no further wiring. See
 structure maps to commands. Prefer to list commands by hand instead of
 relying on the filesystem? See [Manifest](docs/features/manifest.md) for the
 inline `defineManifest` alternative.
+
+<br/>
 
 Run it:
 
@@ -138,7 +144,5 @@ one below based on what you're trying to do:
 - **Know why concise-ti is shaped this way** — [Vision](docs/principles/vision.md) & [Philosophy](docs/principles/philosophy.md)
 - **Contribute or report a bug** — [Contributing Guide](docs/contributing/guide.md), [Testing](docs/contributing/testing.md)
 - **Know what's coming next** — [Roadmap](docs/future/roadmap.md)
-
-Start at [`docs/README.md`](docs/README.md) for the full index.
 
 <br/>
