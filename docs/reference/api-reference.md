@@ -1,6 +1,17 @@
 ## API Reference
 
-Complete type and function definitions for CTI.
+Every type and function CTI exports, as of `src/index.ts`:
+
+```typescript
+export { command } from '@/core/command'
+export { run, defineManifest } from '@/core/runtime'
+
+export type { Config } from '@/types/config'
+export type { Context } from '@/types/context'
+export type { Manifest } from '@/types/manifest'
+export type { Io, Logger } from '@/types/io'
+export type { CommandModule } from '@/types/command'
+```
 
 ### Types
 
@@ -22,7 +33,7 @@ interface CommandMeta {
 }
 ```
 
-A command module is the default export of a command file. It describes the command and provides the handler.
+The default export of a command file. Only `run` is required.
 
 #### FlagSpec
 
@@ -39,7 +50,9 @@ interface FlagSpec {
 }
 ```
 
-Specification for a command flag. Used in the `flags` object of a CommandModule.
+`type`, `short`, `default`, `multiple` are enforced by the parser. `required`,
+`choices`, `validate` are typed but not yet read at parse time. See
+[Flag Parsing](../features/flag-parsing.md).
 
 #### ArgSpec
 
@@ -53,7 +66,8 @@ interface ArgSpec {
 }
 ```
 
-Specification for a positional argument. Used in the `args` array of a CommandModule.
+Descriptive metadata for a positional argument. Not currently read by the
+runtime. See [Positional Arguments](../features/positional-arguments.md).
 
 #### Context
 
@@ -70,25 +84,12 @@ interface Context<F = Record<string, unknown>> {
 }
 ```
 
-The runtime context passed to command handlers. Contains parsed flags, positionals, and access to I/O, logging, and configuration.
-
-**Properties:**
-
-- `flags: F` — Parsed and coerced flags. Generic-typed for safety.
-- `positionals: string[]` — Remaining positional arguments
-- `route: string[]` — Command path (e.g., `['deploy', 'aws']`)
-- `cwd: string` — Current working directory
-- `env: Record<string, string | undefined>` — Environment variables
-- `config: Config` — Application configuration
-- `io: Io` — I/O interface for user interaction
-- `logger: Logger` — Structured logger
-
 #### Io
 
 ```typescript
 interface Io {
   isTTY: boolean
-  colour: (text: string, colour: Colour) => string
+  color: (text: string, color: Color) => string
   write: (text: string) => void
   writeError: (text: string) => void
   spinner: (text: string) => SpinnerHandle
@@ -97,7 +98,7 @@ interface Io {
   select: <T extends string>(question: string, choices: readonly T[]) => Promise<T>
 }
 
-type Colour = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'gray'
+type Color = 'red' | 'green' | 'yellow' | 'blue' | 'magenta' | 'cyan' | 'gray'
 
 interface SpinnerHandle {
   update: (text: string) => void
@@ -107,17 +108,8 @@ interface SpinnerHandle {
 }
 ```
 
-Interface for user interaction. Provided via `ctx.io`.
-
-**Methods:**
-
-- `colour(text, colour)` — Return coloured text for terminal output
-- `write(text)` — Write to stdout
-- `writeError(text)` — Write to stderr
-- `spinner(text)` — Create a loading indicator
-- `prompt(question)` — Request text input
-- `confirm(question, fallback?)` — Request yes/no confirmation
-- `select(question, choices)` — Present a choice menu
+`write`, `writeError`, `color`, `isTTY` are implemented. `spinner`, `prompt`,
+`confirm`, `select` are interfaces backed by no-op stubs. See [I/O System](../architecture/io.md).
 
 #### Logger
 
@@ -132,15 +124,6 @@ interface Logger {
   error: (...args: unknown[]) => void
 }
 ```
-
-Structured logger. Provided via `ctx.logger`.
-
-**Methods:**
-
-- `debug(...args)` — Log at debug level (only if DEBUG env var set)
-- `info(...args)` — Log at info level
-- `warn(...args)` — Log at warn level (to stderr)
-- `error(...args)` — Log at error level (to stderr)
 
 #### Manifest
 
@@ -157,52 +140,68 @@ interface Manifest {
 }
 ```
 
-Internal manifest used by the router for command discovery.
-
 #### Config
 
 ```typescript
 interface Config {
   name: string
-  bin?: string
-  commandsDir?: string
   version: string
+  commandsDir?: string
   targets?: string[]
+  bin?: string
   manifest?: Manifest
 }
 ```
 
-Base configuration interface. Extend this with your own properties. If `manifest` is set, it's used directly; otherwise the manifest is discovered from `commandsDir`.
+If `manifest` is set, `run()` uses it directly; otherwise it discovers one from
+`commandsDir` (default `'commands'`). `bin` defaults to `name`.
 
 ### Functions
 
-**Core**
-
-#### run
+#### `run(config, importMeta?, argv?)`
 
 ```typescript
 function run(config: Config, importMeta?: { dir: string }, argv?: string[]): Promise<number>
 ```
 
-The main dispatcher. Uses `config.manifest` if present, otherwise discovers one from `config.commandsDir` (resolved relative to `importMeta.dir` — required in that case). Resolves `argv` (defaults to `Bun.argv.slice(2)`) against the manifest, parses and coerces flags, builds the `Context`, invokes the matched command, and resolves to the process exit code (the command's numeric return, or `0`). On an unknown command or a thrown error it writes to stderr and resolves to `1`.
+The dispatcher. Uses `config.manifest` if present, otherwise discovers one from
+`config.commandsDir` resolved relative to `importMeta.dir` (required in that
+case). Resolves `argv` (defaults to `Bun.argv.slice(2)`) against the manifest,
+parses and coerces flags, builds `Context`, invokes the matched command, and
+resolves to the exit code: the command's numeric return, or `0`. On an
+unknown route or a thrown error, writes to stderr and resolves to `1`. When
+called with no explicit `argv` (the entrypoint case), also sets
+`process.exitCode`.
 
-#### defineManifest
+#### `defineManifest(routes)`
 
 ```typescript
 function defineManifest(routes: Record<string, CommandModule>): Manifest
 ```
 
-Build a `Manifest` from a flat map of slash-delimited route to command module (`'users/list'` becomes `['users', 'list']`). Each entry gets an `importer` that resolves the given module.
+Builds a `Manifest` from a flat map of slash-delimited route to command module.
+See [Manifest](../features/manifest.md).
 
-#### buildRouteLookup
+#### `discoverManifest(commandsDir)`
+
+```typescript
+function discoverManifest(commandsDir: string): Promise<Manifest>
+```
+
+Walks `commandsDir`, building a route from each `.ts` file's path (skipping
+`*.test.ts`; `index.ts` collapses into its parent's route) and lazily
+importing its default export. Not exported from `cti` directly; `run()` calls
+it for you when `config.manifest` is unset.
+
+#### `buildRouteLookup(manifest)`
 
 ```typescript
 function buildRouteLookup(manifest: Manifest): Map<string, ManifestEntry>
 ```
 
-Build a lookup map from manifest entries for fast route resolution.
+Builds an O(1) lookup keyed by `route.join('/')`.
 
-#### resolveRoute
+#### `resolveRoute(args, lookup)`
 
 ```typescript
 function resolveRoute(
@@ -211,9 +210,10 @@ function resolveRoute(
 ): { entry: ManifestEntry; remaining: string[] } | null
 ```
 
-Resolve a command route from arguments. Returns the matching entry and remaining arguments, or null if not found.
+Longest-prefix match of `args` against `lookup`. Returns the matching entry and
+the unmatched remainder, or `null`.
 
-#### parseAndCoerce
+#### `parseAndCoerce(args, flags)`
 
 ```typescript
 function parseAndCoerce(
@@ -222,123 +222,87 @@ function parseAndCoerce(
 ): { values: Record<string, unknown>; positionals: string[] }
 ```
 
-Parse arguments and coerce flag values to their declared types.
+Parses `args` with Node's `parseArgs` against the given flag specs and coerces
+each value to its declared type.
 
-**I/O**
-
-#### createIo
+#### `createIo()` / `createLogger()`
 
 ```typescript
 function createIo(): Io
-```
-
-Create an I/O interface instance.
-
-#### createLogger
-
-```typescript
 function createLogger(): Logger
 ```
 
-Create a logger instance.
+Build a fresh `Io`/`Logger` instance, called once per `run()` invocation.
 
-#### colourize
+#### `colorize(text, color)`
 
 ```typescript
-function colourize(text: string, colour: Colour): string
+function colorize(text: string, color: Color): string
 ```
 
-Return coloured text (respecting TTY and NO_COLOR).
+Wraps `text` in ANSI codes for `color`, or returns it unchanged if
+`shouldUseColor()` is false.
 
-#### createSpinner
+#### `createSpinner(text)`
 
 ```typescript
 function createSpinner(text: string): SpinnerHandle
 ```
 
-Create a spinner instance.
+Currently a no-op stub. See [Spinners](../features/spinners.md).
 
-**Utilities**
-
-#### coerceValue
+#### `coerceValue(value, spec)`
 
 ```typescript
 function coerceValue(value: unknown, spec: FlagSpec): unknown
 ```
 
-Coerce a value to its declared type (string, number, boolean).
+Converts a raw parsed value to the type declared in `spec.type`.
 
-#### shouldUseColour
-
-```typescript
-function shouldUseColour(): boolean
-```
-
-Determine if colour should be used (respecting TTY, NO_COLOR, FORCE_COLOR).
-
-#### isTTY
+#### `shouldUseColor()` / `isTTY()`
 
 ```typescript
+function shouldUseColor(): boolean
 function isTTY(): boolean
 ```
 
-Determine if stdout is a TTY.
+`shouldUseColor` checks `NO_COLOR`, then `FORCE_COLOR`, then falls back to
+`isTTY()`.
 
-### Module Exports
+### Internal module map
 
-#### src/types/
-
-All type definitions are re-exported from type files:
+For contributors browsing `src/` directly (all internal imports use the `@/`
+alias):
 
 ```typescript
-import type { CommandModule, FlagSpec, ArgSpec } from './types/command'
-import type { Context } from './types/context'
-import type { Config } from './types/config'
-import type { Io, Logger, Colour, SpinnerHandle } from './types/io'
-import type { Manifest, ManifestEntry } from './types/manifest'
+// @/types/
+import type { CommandModule, FlagSpec, ArgSpec } from '@/types/command'
+import type { Context } from '@/types/context'
+import type { Config } from '@/types/config'
+import type { Io, Logger, Color, SpinnerHandle } from '@/types/io'
+import type { Manifest, ManifestEntry } from '@/types/manifest'
+
+// @/core/
+import { run, defineManifest } from '@/core/runtime'
+import { discoverManifest } from '@/core/discovery'
+import { buildRouteLookup, resolveRoute } from '@/core/router'
+import { parseAndCoerce, toParseArgsOptions } from '@/core/parser'
+import { command } from '@/core/command'
+
+// @/io/
+import { createIo, createLogger } from '@/io/index'
+import { colorize } from '@/io/color'
+import { createSpinner } from '@/io/spinner'
+import { prompt, confirm, select } from '@/io/prompt'
+
+// @/utils/
+import { coerceValue } from '@/utils/coerce'
+import { shouldUseColor, isTTY } from '@/utils/tty'
 ```
 
-#### src/core/
+As a consumer, import from the package instead:
 
 ```typescript
-import { defineManifest, run } from './core/runtime'
-import { buildRouteLookup, resolveRoute } from './core/router'
-import { parseAndCoerce, toParseArgsOptions } from './core/parser'
-```
-
-#### src/io/
-
-```typescript
-import { createIo, createLogger } from './io/index'
-import { colourize } from './io/colour'
-import { createSpinner } from './io/spinner'
-import { prompt, confirm, select } from './io/prompt'
-```
-
-#### src/utils/
-
-```typescript
-import { coerceValue } from './utils/coerce'
-import { shouldUseColour, isTTY } from './utils/tty'
-```
-
----
-
-### Usage
-
-Import types and functions as needed, then dispatch with `run`:
-
-```typescript
-import type { CommandModule } from './types/command'
-import type { Config } from './types/config'
-import { defineManifest, run } from './core/runtime'
-
-const hello: CommandModule = {
-  run: (ctx) => {
-    ctx.io.write('Hello!')
-  },
-}
-
-const config: Config = { name: 'demo', version: '1.0.0', manifest: defineManifest({ hello }) }
-void run(config)
+import { command, run } from 'cti'
+import type { Config, CommandModule } from 'cti'
 ```

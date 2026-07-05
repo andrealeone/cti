@@ -1,98 +1,75 @@
 # Type Coercion
 
-CTI automatically converts parsed string values into their declared types. The coercion layer ensures type safety without manual casting.
+Node's `parseArgs` only understands `string` and `boolean`. CTI adds a coercion
+step on top so `ctx.flags` matches the type each flag declares, with no manual
+casting in handlers.
 
-## How Coercion Works
+## How it works
 
-Since Node's `parseArgs` only handles `string` and `boolean` types, CTI adds a coercion layer that:
+1. `parseArgs` tokenizes `argv` against the flag options
+2. For each flag, the declared `type` decides how its raw value is converted
+3. The coerced values populate `ctx.flags`
 
-1. Tokenizes arguments using `parseArgs`
-2. Reads the declared flag type from the command module
-3. Converts the parsed string value to the target type
-4. Validates the result
+## String
 
-## String Coercion
-
-String values pass through unchanged:
+Passed through unchanged:
 
 ```typescript
-flags: {
-  name: flags.string()
-}
-// Input: --name Alice → flags.name = 'Alice'
+flags: { name: { type: 'string' } }
+// --name Alice → ctx.flags.name === 'Alice'
 ```
 
-## Number Coercion
+## Number
 
-String values are converted to numbers:
+Converted with `Number(value)`; throws if the result is `NaN`:
 
 ```typescript
-flags: {
-  count: flags.number()
-}
-// Input: --count 42 → flags.count = 42 (number)
-// Input: --count abc → Error: invalid number
+flags: { count: { type: 'number' } }
+// --count 42  → ctx.flags.count === 42 (number)
+// --count abc → Error: Invalid number: "abc"
 ```
 
-## Boolean Coercion
+A thrown coercion error is caught by `run()`, which writes it to stderr and
+exits with code `1`, so your handler never sees the bad value.
 
-Boolean flags are handled natively by `parseArgs`:
+## Boolean
+
+Already boolean coming out of `parseArgs`; passed through as-is:
 
 ```typescript
-flags: {
-  verbose: flags.boolean()
-}
-// Input: --verbose → flags.verbose = true
-// Input: (no flag) → flags.verbose = false
+flags: { verbose: { type: 'boolean' } }
+// --verbose      → ctx.flags.verbose === true
+// (no flag)      → ctx.flags.verbose === undefined, unless a default is set
 ```
 
-## Default Handling
-
-Defaults are coerced to the correct type:
+## Defaults are never coerced
 
 ```typescript
-flags: {
-  timeout: flags.number({ default: 5000 })
-}
+flags: { timeout: { type: 'number', default: 5000 } }
 ```
 
-The default value `5000` is a number and stays a number; CTI never coerces defaults.
+`5000` is already a `number`, so CTI uses it as-is when `--timeout` is omitted.
 
-## Error on Invalid Coercion
+## Multiple values
 
-If a value cannot be coerced to its declared type, parsing fails with a usage error:
+Each occurrence is coerced individually:
 
 ```typescript
-flags: {
-  port: flags.number()
-}
-// Input: --port abc → Error: Cannot coerce 'abc' to number
+flags: { ports: { type: 'number', multiple: true } }
+// --ports 8080 --ports 9000 → ctx.flags.ports = [8080, 9000]
 ```
 
-## Multiple Values
+## What coercion doesn't do
 
-When coercing multiple values, each value is coerced individually:
-
-```typescript
-flags: {
-  ports: flags.number({ multiple: true })
-}
-// Input: --ports 8080 --ports 9000 → flags.ports = [8080, 9000]
-```
-
-## Custom Coercion with Validation
-
-The `validate` option lets you apply custom logic after coercion:
+CTI stops at `string` / `number` / `boolean` on purpose: no dates, URLs, or
+enum parsing. That logic depends on your domain (timezone? version string vs.
+float?), so it belongs in your handler:
 
 ```typescript
-flags: {
-  port: flags.number({
-    validate: (value) => {
-      const num = value as number
-      return num >= 1 && num <= 65535 ? true : 'Invalid port'
-    },
-  })
+run(ctx) {
+  const birthdate = new Date(ctx.flags.birthdate as string)
+  // validate/interpret here
 }
 ```
 
-Here, coercion converts the string to a number first, then validation checks the range.
+See [Utils: Coerce](../architecture/utils.md) for the implementation.

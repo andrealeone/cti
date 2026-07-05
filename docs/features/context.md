@@ -1,13 +1,11 @@
 # Context
 
-The context object is passed to every command handler and contains all the information the command needs: parsed flags, positional arguments, the current route, I/O utilities, environment, and more.
-
-## Context Interface
-
-Every command's `run` function receives a context object:
+The context object is the single argument passed to every command's `run`
+function. It's the only thing a handler reads, and `run()` is the only thing
+that writes it, and that separation is what makes commands easy to test.
 
 ```typescript
-export interface Context<F = Record<string, unknown>> {
+interface Context<F = Record<string, unknown>> {
   flags: F
   positionals: string[]
   route: string[]
@@ -21,128 +19,105 @@ export interface Context<F = Record<string, unknown>> {
 
 ## Flags
 
-The `flags` object contains parsed and coerced flag values, typed according to the command's flag definitions:
+Parsed and coerced according to the command's `flags` spec. See
+[Flag Parsing](flag-parsing.md):
 
 ```typescript
-flags: {
-  verbose: flags.boolean({ short: 'v' }),
-  count: flags.number({ default: 1 }),
-}
-run({ flags }) {
-  console.log(flags.verbose)  // boolean
-  console.log(flags.count)    // number
-}
+export default command({
+  flags: {
+    verbose: { type: 'boolean', short: 'v' },
+    count: { type: 'number', default: 1 },
+  },
+  run(ctx) {
+    ctx.flags.verbose // boolean
+    ctx.flags.count // number
+  },
+})
 ```
 
 ## Positionals
 
-The `positionals` array contains positional arguments in order:
-
-```typescript
-run({ positionals }) {
-  const source = positionals[0]
-  const dest = positionals[1]
-}
-```
+Non-flag arguments left over after routing, in order, always `string[]`. See
+[Positional Arguments](positional-arguments.md).
 
 ## Route
 
-The `route` array is the command's path. For `app db migrate`, the route is `['db', 'migrate']`:
+The matched route as an array, e.g. `['db', 'migrate']` for `app db migrate`:
 
 ```typescript
-run({ route }) {
-  console.log(route.join(' '))  // 'db migrate'
+run(ctx) {
+  ctx.io.write(ctx.route.join(' ')) // 'db migrate'
 }
 ```
 
-Useful for:
+Useful for logging which command ran, or for a command that needs to know its
+own path.
 
-- Logging which command ran
-- Nested commands that need to know their own path
-- Building help text
-
-## Working Directory
-
-The `cwd` string is the current working directory:
+## `cwd` and `env`
 
 ```typescript
-run({ cwd }) {
-  console.log(`Running in ${cwd}`)
+run(ctx) {
+  ctx.io.write(`Running in ${ctx.cwd}`)
+  const apiKey = ctx.env.API_KEY
 }
 ```
 
-## Environment Variables
-
-The `env` object contains all environment variables:
-
-```typescript
-run({ env }) {
-  const apiKey = env.API_KEY
-  const debug = env.DEBUG
-}
-```
+`env` is `process.env`, typed as `Record<string, string | undefined>`.
 
 ## Config
 
-The `config` object contains CTI configuration:
+The `Config` object passed to `run()`:
 
 ```typescript
-export interface Config {
-  name: string // CLI name from package.json
-  bin?: string // Entrypoint binary name (defaults to name if not provided)
-  commandsDir?: string // Commands directory path, used when manifest isn't set
-  version: string // Version from package.json
-  targets?: string[] // Compile targets
-  manifest?: Manifest // Pre-built manifest; skips discovery when set
+interface Config {
+  name: string
+  version: string
+  commandsDir?: string
+  targets?: string[]
+  bin?: string
+  manifest?: Manifest
 }
 ```
 
 ```typescript
-run({ config }) {
-  io.write(`${config.name} v${config.version}`)
+run(ctx) {
+  ctx.io.write(`${ctx.config.name} v${ctx.config.version}`)
 }
 ```
 
-## I/O Kit
+Extend `Config` with your own properties (an API base URL, feature flags,
+whatever your commands need); CTI only reads the fields above.
 
-The `io` object provides output methods, colors, spinners, and prompts:
+## `io` and `logger`
 
 ```typescript
-run({ io }) {
-  io.write('Output')
-  io.writeError('Error')
-  const colored = io.colour('text', 'green')
-  const spinner = io.spinner('Loading...')
+run(ctx) {
+  ctx.io.write('Output')
+  ctx.io.writeError('Error')
+  ctx.logger.debug('Starting operation')
 }
 ```
 
-## Logger
+See [I/O System](../architecture/io.md) and [Logger](logger.md).
 
-The `logger` object provides structured logging:
+## Type safety with generics
+
+`Context<F>` carries your flag shape:
 
 ```typescript
-run({ logger }) {
-  logger.info('Command started')
-  logger.debug('Debug info')
-  logger.warn('Warning')
-  logger.error('Error')
+interface DeployFlags {
+  environment: string
+  force: boolean
 }
+
+export default command<DeployFlags>({
+  flags: {
+    environment: { type: 'string', default: 'staging' },
+    force: { type: 'boolean' },
+  },
+  run(ctx) {
+    ctx.flags.environment // string, not unknown
+    ctx.flags.force // boolean, not unknown
+  },
+})
 ```
-
-## Type Safety
-
-The flags in the context are fully typed based on your flag declarations:
-
-```typescript
-flags: {
-  port: flags.number({ default: 8080 })
-}
-run({ flags }) {
-  // flags.port is a number, no casting needed
-  const url = `http://localhost:${flags.port}`
-}
-```
-
-## Single Writer Pattern
-
-The context is read-only in handlers. It's the only object a handler reads, and the dispatcher is the only writer. This keeps behavior pure and testable.

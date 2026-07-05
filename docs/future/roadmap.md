@@ -3,7 +3,7 @@
 CTI is being built in phases. This is where the existing pieces are heading: the
 `run()` / `defineManifest()` dispatcher, the router and parser, the I/O primitives,
 and the type system. Every item here extends a component that already exists in the
-source — we don't promise subsystems that aren't built.
+source; we don't promise subsystems that aren't built.
 
 ### Phase 0: Foundation (Now)
 
@@ -12,7 +12,7 @@ Stabilise the core framework:
 - [Done] Core router and command dispatch (`run`, `defineManifest`, `resolveRoute`)
 - [Done] Argument and flag parsing with type coercion
 - [Done] Type system
-- [Done] I/O colour output with TTY / NO_COLOR detection
+- [Done] I/O color output with TTY / NO_COLOR detection
 - [In Progress] Real `prompt` / `confirm` / `select` implementations (currently non-interactive stubs)
 - [In Progress] Real spinner animation (currently a no-op stub)
 - [In Progress] Complete documentation
@@ -25,11 +25,11 @@ Stabilise the core framework:
 
 Make the existing dispatcher and parser do more:
 
-- **Flag validation** — enforce `FlagSpec.choices` and `validate` during parsing
-- **`--help` and `--version`** — generated from command `meta` and `Config`
-- **Friendlier errors** — "did you mean?" suggestions on unknown commands
-- **Shell completions** — generate bash, zsh, and fish completion from the manifest
-- **Manifest auto-generation** — scan a commands directory into a manifest (today `defineManifest` is written by hand)
+- **Flag validation**: enforce `FlagSpec.choices` and `validate` during parsing
+- **`--help` and `--version`**: generated from command `meta` and `Config`
+- **Friendlier errors**: "did you mean?" suggestions on unknown commands
+- **Shell completions**: generate bash, zsh, and fish completion from the manifest
+- **Manifest auto-generation**: scan a commands directory into a manifest (today `defineManifest` is written by hand)
 
 **Why:** These are the natural next steps for the dispatcher and parser that already ship.
 
@@ -37,11 +37,11 @@ Make the existing dispatcher and parser do more:
 
 Build on the I/O primitives that already exist:
 
-- **Structured output** — tables and lists layered over `ctx.io.write`
-- **Progress bars** — for operations with measurable progress
-- **Theming** — customisable colour schemes over the existing `colour` API
+- **Structured output**: tables and lists layered over `ctx.io.write`
+- **Progress bars**: for operations with measurable progress
+- **Theming**: customizable color schemes over the existing `color` API
 
-**Why:** As CLIs get more complex, they need better output primitives — without leaving the small, dependency-free I/O surface.
+**Why:** As CLIs get more complex, they need better output primitives, without leaving the small, dependency-free I/O surface.
 
 ### Philosophy
 
@@ -65,16 +65,16 @@ Ideas are driven by real problems, not imagination. If 100 developers ask for fe
 
 Once released, APIs should be stable. We'll use major versions for breaking changes, but try to avoid them.
 
-#### Optimise for CLI Use Cases
+#### Optimize for CLI Use Cases
 
 CTI is specifically for CLIs. Features that benefit other use cases (servers, libraries) are lower priority. If you want a server framework, use Hono.
 
 ### How to Influence the Roadmap
 
-1. **Use CTI** — Build things with it; discover real problems
-2. **Open issues** — Describe use cases, not solutions
-3. **Contribute** — Submit PRs for features you need
-4. **Discuss** — Join conversations on GitHub
+1. **Use CTI**: build things with it and discover real problems
+2. **Open issues**: describe use cases, not solutions
+3. **Contribute**: submit PRs for features you need
+4. **Discuss**: join conversations on GitHub
 
 ---
 

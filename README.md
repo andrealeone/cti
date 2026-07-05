@@ -10,15 +10,34 @@ Installing a CLI framework should feel like installing Next.js, not like copying
 
 There are no configuration files to maintain and no wiring code to write. The framework handles the plumbing, so the developer writes only what each command does.
 
+```
+                 ┌──────────────────────────┐
+   argv    ───►  │   run(config, meta)      │
+                 │   the only line you write │
+                 └────────────┬─────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+        resolve route   parse & coerce   build context
+       (commands/ tree)   (your flags)   (io, cwd, env…)
+              │               │               │
+              └───────────────┴───────┬───────┘
+                                       ▼
+                              your command's run()
+                                       │
+                                       ▼
+                                  exit code
+```
+
 <br/>
 
 ### Features
 
 - **No Boilerplate** No manual imports or routing logic, just files in a `commands` directory.
 - **Typed Arguments** Flags and positionals are declared once and arrive in your handler already parsed, coerced, and typed.
-- **Zero-Config**: CTI reads your `package.json` and discovers commands from the filesystem; nothing to wire up by hand.
+- **Zero-Config** CTI discovers commands from the filesystem; nothing to wire up by hand.
 - **Lightweight** No runtime dependencies; the framework is the only thing in your `node_modules` that's CTI.
-- **Bun-Optimised** Lean on Bun's speed and native TypeScript.
+- **Bun-Optimized** Lean on Bun's speed and native TypeScript.
 - **Compiles to Binary** Ship your CLI as a single standalone executable with `bun build --compile`.
 
 <br/><br/>
@@ -31,7 +50,7 @@ Requires [Bun](https://bun.sh) 1.3 or later.
 mkdir new-cli && cd new-cli
 
 bun init -y
-bun install
+bun add cti
 ```
 
 You only ever touch two kinds of files: the entrypoint, written once, and command
@@ -47,7 +66,7 @@ new-cli/
 Create `commands/fib.ts`:
 
 ```typescript
-import { command } from './core/command'
+import { command } from 'cti'
 
 export default command({
   meta: { description: 'Compute a Fibonacci number, or the sequence leading to it' },
@@ -66,8 +85,8 @@ export default command({
 })
 ```
 
-The `flags` block is enough to get a typed, validated `--sequence` toggle
-in `ctx.flags`. No manual parsing, no wiring it into a parser yourself.
+The `flags` block is enough to get a typed `--sequence` toggle in `ctx.flags`.
+No manual parsing, no wiring it into a parser yourself.
 
 Create `main.ts`:
 
@@ -79,13 +98,12 @@ void run({ name: 'new-cli', version: '1.0.0' }, import.meta)
 
 That's the whole entrypoint, and it's the last time you'll edit it. CTI automatically
 discovers commands from the `commands` directory, turns `fib.ts` into the `fib` route,
-parses argv against its declared flags, and dispatches — automatically, on every run.
+parses argv against its declared flags, and dispatches automatically on every run.
 Add a second file and `app second-command` exists with no further wiring. See
 [Command Routing](docs/features/command-routing.md) for how the file
 structure maps to commands. Prefer to list commands by hand instead of
-relying on the filesystem? See
-[Manifest Definition](docs/features/manifest-definition.md) for the inline
-`defineManifest` alternative.
+relying on the filesystem? See [Manifest](docs/features/manifest.md) for the
+inline `defineManifest` alternative.
 
 Run it:
 
@@ -108,24 +126,21 @@ bun build ./main.ts --compile --outfile dist/my-cli
 
 ## Documentation
 
-The example above is just a taste. CTI has comprehensive documentation covering everything from first steps to advanced patterns. Here's where to go.
+The example above is just a taste. Full docs live in [`/docs`](docs); pick a
+column below based on what you're trying to do:
 
-**New to CTI?**  
-Start with the [Quick Start guide](docs/getting-started/quickstart.md) for a five-minute tour, or read [Core Concepts](docs/concepts/core-concepts.md) to understand the mental model.
+| I want to...                     | Read                                                                                                                     |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Get a working CLI in 5 minutes    | [Quick Start](docs/getting-started/quickstart.md)                                                                          |
+| Understand the mental model       | [Core Concepts](docs/concepts/core-concepts.md)                                                                            |
+| Write commands well                | [Building Commands](docs/guides/building-commands.md), [Examples](docs/guides/examples.md), [Demos](docs/guides/demos.md) |
+| Look up a flag/routing/I/O detail | [Features](docs/features/), one page per capability                                                                      |
+| See how CTI is built internally   | [Architecture](docs/architecture/core.md): runtime, router, parser, I/O, types                                            |
+| Look up an exact type or function | [API Reference](docs/reference/api-reference.md)                                                                           |
+| Know why CTI is shaped this way   | [Vision](docs/principles/vision.md) & [Philosophy](docs/principles/philosophy.md)                                          |
+| Contribute or report a bug        | [Contributing Guide](docs/contributing/guide.md), [Testing](docs/contributing/testing.md)                                  |
+| Know what's coming next           | [Roadmap](docs/future/roadmap.md)                                                                                          |
 
-**Ready to build something?**  
-Head to [Building Commands](docs/guides/building-commands.md) for practical patterns, browse [Examples](docs/guides/examples.md) for real-world snippets, or run the [runnable demos](docs/guides/demos.md) in [`/demos`](demos) to see CTI in action.
-
-**Understanding the design**  
-Explore [System Overview](docs/architecture/system-design.md) to see how the pieces fit together, then dive into specific modules: [Core](docs/architecture/core.md) (routing and argument parsing), [I/O System](docs/architecture/io.md) (colours, prompts, spinners), [Type System](docs/architecture/types.md) (strong typing), and [Utilities](docs/architecture/utils.md).
-
-**Why these choices?**  
-[Value Proposition](docs/principles/value-proposition.md) explains what makes CTI worth your time, and [Philosophy](docs/principles/philosophy.md) compares it to other frameworks.
-
-**Contributing & roadmap**  
-[Contribution Guide](docs/contributing/guide.md) covers the development workflow, [Testing](docs/contributing/testing.md) explains the test structure, and [Roadmap](docs/future/roadmap.md) shows where CTI is heading.
-
-**Full reference**  
-See the [API Reference](docs/reference/api-reference.md) for type definitions and exports.
+Start at [`docs/README.md`](docs/README.md) for the full index.
 
 <br/>

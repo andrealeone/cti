@@ -1,13 +1,10 @@
 # Logger
 
-CTI provides a built-in logger for structured logging. The logger respects the `DEBUG` environment variable and provides four log levels.
-
-## Logger Interface
-
-Every command receives a `logger` object in the context:
+`ctx.logger` is for diagnostics, separate from `ctx.io.write()`, which is for
+the output your command exists to produce.
 
 ```typescript
-export interface Logger {
+interface Logger {
   level: LogLevel
   debug: (...args: unknown[]) => void
   info: (...args: unknown[]) => void
@@ -16,94 +13,41 @@ export interface Logger {
 }
 ```
 
-## Log Levels
-
-CTI supports four log levels: `debug`, `info`, `warn`, and `error`.
+## Levels
 
 ```typescript
-run({ logger }) {
-  logger.debug('Detailed information for debugging')
-  logger.info('General informational message')
-  logger.warn('Warning about potential issues')
-  logger.error('Error that occurred')
+run(ctx) {
+  ctx.logger.debug('Starting operation', { args: ctx.flags })
+  ctx.logger.info('Operation successful')
+  ctx.logger.warn('Deprecated flag used')
+  ctx.logger.error('Operation failed', err)
 }
 ```
 
-## Debug Logging
-
-Debug messages are only printed when the `DEBUG` environment variable is set:
+`debug` only prints when the `DEBUG` environment variable is set; `info`,
+`warn`, and `error` always print:
 
 ```bash
-app command              # Debug logs hidden
-DEBUG=1 app command      # Debug logs visible
+app deploy          # debug logs hidden
+DEBUG=1 app deploy  # debug logs visible
 ```
 
-```typescript
-run({ logger }) {
-  logger.debug('This only shows with DEBUG=1')
-}
-```
-
-## Info, Warn, Error
-
-These levels always print:
-
-```typescript
-run({ logger }) {
-  logger.info('Always visible')
-  logger.warn('Always visible')
-  logger.error('Always visible')
-}
-```
-
-## Prefixed Output
-
-Each log level is prefixed for easy identification:
-
-```
-[DEBUG] Detailed information
-[INFO] General message
-[WARN] Warning message
-[ERROR] Error message
-```
-
-## Multiple Arguments
-
-Log methods accept multiple arguments:
+`info`/`debug` go to stdout via `console.log`; `warn`/`error` go to stderr via
+`console.warn`/`console.error`. Each is prefixed: `[DEBUG]`, `[INFO]`, `[WARN]`,
+`[ERROR]`.
 
 ```typescript
 logger.info('User logged in:', user.name, 'from', user.ip)
-// Output: [INFO] User logged in: alice from 192.168.1.1
+// [INFO] User logged in: alice from 192.168.1.1
 ```
 
-## Use Cases
+## `logger` vs. `io.write()`
 
-The logger is useful for:
+- `io.write()`: the command's actual output; what a user redirects, greps, or pipes
+- `logger`: diagnostics for you and your users while debugging, not the product of the command
 
-- Debugging during development
-- Tracing command execution
-- Recording warnings about deprecated options
-- Reporting errors with context
-- Non-critical diagnostic information
+## `level`
 
-## Difference from io.write()
-
-- `io.write()` is for user-facing output
-- `logger` is for diagnostic and debug messages
-- Use `io.write()` for normal output
-- Use `logger` for development and troubleshooting
-
-## Context Access
-
-The logger is always available in the command context:
-
-```typescript
-export interface Context {
-  logger: Logger
-  // ... other properties
-}
-```
-
-## Standard Output
-
-Logger methods write to `console` (stdout/stderr), keeping output mixed with command output. For clean separation, use `io.writeError()` for errors that should be distinct.
+`Logger.level` is currently descriptive (always `'info'`); it isn't used to
+filter which methods print. `debug` gating is the `DEBUG` env var, and the
+other three levels always print regardless of `level`.

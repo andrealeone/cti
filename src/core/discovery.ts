@@ -36,7 +36,7 @@ function routeFor(commandsDir: string, file: string): string[] {
  * route (slash path mirrors the file path, `index.ts` collapses into its parent
  * directory's route), and its default export is loaded as the CommandModule.
  *
- * This is the directory-scanning counterpart to `defineManifest` — the inline
+ * This is the directory-scanning counterpart to `defineManifest`. The inline
  * map is handwritten and best for a handful of commands; this scales to many
  * commands without an ever-growing manifest literal.
  */

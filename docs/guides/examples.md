@@ -63,7 +63,7 @@ async function deploy(env: string, verbose: boolean, ctx: Context) {
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
     spinner.succeed(`Deployed to ${env}`)
-    ctx.io.write(ctx.io.colour('[Success] Deployment successful', 'green'))
+    ctx.io.write(ctx.io.color('[Success] Deployment successful', 'green'))
   } catch (err) {
     spinner.fail(`Deployment failed`)
     ctx.logger.error('Deployment error:', err)
@@ -165,7 +165,7 @@ export default {
         }
       }
 
-      ctx.io.write(ctx.io.colour(`\n[Success] Processed ${files.length} files`, 'green'))
+      ctx.io.write(ctx.io.color(`\n[Success] Processed ${files.length} files`, 'green'))
     } catch (err) {
       ctx.io.writeError(`Error: ${err.message}`)
       process.exit(1)
@@ -198,7 +198,7 @@ export default {
     spinner.succeed('Project created')
 
     ctx.io.write(`
-${ctx.io.colour('[Success] Project setup complete', 'green')}
+${ctx.io.color('[Success] Project setup complete', 'green')}
 
 Name:        ${name}
 Type:        ${type}
@@ -257,7 +257,7 @@ export default {
       ctx.io.write(JSON.stringify(data, null, 2))
     } catch (err) {
       ctx.logger.error('Request failed:', err)
-      ctx.io.writeError(ctx.io.colour('Request failed', 'red'))
+      ctx.io.writeError(ctx.io.color('Request failed', 'red'))
       process.exit(1)
     }
   },
@@ -268,10 +268,10 @@ export default {
 
 These examples show:
 
-- **Simple commands** — Greetings, basic I/O
-- **Complex operations** — Deployment, file processing
-- **User interaction** — Prompts, confirmations, selections
-- **Error handling** — Try/catch, graceful failures
-- **API integration** — HTTP requests, JSON handling
+- **Simple commands**: Greetings, basic I/O
+- **Complex operations**: Deployment, file processing
+- **User interaction**: Prompts, confirmations, selections
+- **Error handling**: Try/catch, graceful failures
+- **API integration**: HTTP requests, JSON handling
 
 Adapt these patterns to your needs.

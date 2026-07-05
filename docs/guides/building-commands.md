@@ -27,9 +27,9 @@ export default myCommand
 
 Each part serves a purpose:
 
-- **meta** — User-facing documentation
-- **flags** — Declare what flags your command accepts
-- **run** — The actual implementation
+- **meta**: User-facing documentation
+- **flags**: Declare what flags your command accepts
+- **run**: The actual implementation
 
 ### Writing Effective Metadata
 
@@ -52,13 +52,13 @@ const deployCommand = {
 
 **Best practices:**
 
-- **Description** — One sentence, present tense, lowercase
-- **Examples** — Show realistic usage, cover common patterns
-- **Aliases** — Offer shortcuts, but don't overload
+- **Description**: One sentence, present tense, lowercase
+- **Examples**: Show realistic usage, cover common patterns
+- **Aliases**: Offer shortcuts, but don't overload
 
 ### Declaring Flags
 
-Flags are how users customise command behaviour:
+Flags are how users customize command behavior:
 
 ```typescript
 const command = {
@@ -111,11 +111,11 @@ const command = {
 
 **Guidelines:**
 
-- **Defaults** — Provide sensible defaults so users rarely need flags
-- **Short forms** — Offer `-f` for frequently-used flags like `--force`
-- **Types** — Use appropriate types (number for counts, boolean for toggles)
-- **Descriptions** — Explain what the flag does and what values are valid
-- **Multiple** — Only use for flags that can appear multiple times
+- **Defaults**: Provide sensible defaults so users rarely need flags
+- **Short forms**: Offer `-f` for frequently-used flags like `--force`
+- **Types**: Use appropriate types (number for counts, boolean for toggles)
+- **Descriptions**: Explain what the flag does and what values are valid
+- **Multiple**: Only use for flags that can appear multiple times
 
 ### Accessing Flags in Handlers
 
@@ -205,18 +205,18 @@ ctx.io.write('Deployment complete')
 ctx.io.writeError('Something went wrong')
 ```
 
-#### Coloured Output
+#### Colored Output
 
 ```typescript
-const success = ctx.io.colour('[OK] Done', 'green')
-const error = ctx.io.colour('[Error] Failed', 'red')
-const warning = ctx.io.colour('[Warning] Warning', 'yellow')
+const success = ctx.io.color('[OK] Done', 'green')
+const error = ctx.io.color('[Error] Failed', 'red')
+const warning = ctx.io.color('[Warning] Warning', 'yellow')
 
 ctx.io.write(`${success} Deployment finished`)
 ctx.io.write(`${warning} Some warnings detected`)
 ```
 
-Available colours: `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `gray`
+Available colors: `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `gray`
 
 #### Spinners
 
@@ -257,13 +257,13 @@ const command = {
       await someOperation()
     } catch (err) {
       if (err instanceof NetworkError) {
-        ctx.io.writeError(ctx.io.colour('Network error: ' + err.message, 'red'))
+        ctx.io.writeError(ctx.io.color('Network error: ' + err.message, 'red'))
         process.exit(1)
       }
 
       // Unknown error
       ctx.logger.error('Unexpected error:', err)
-      ctx.io.writeError(ctx.io.colour('Something went wrong. Run with DEBUG=1 for details.', 'red'))
+      ctx.io.writeError(ctx.io.color('Something went wrong. Run with DEBUG=1 for details.', 'red'))
       process.exit(1)
     }
   },
@@ -272,10 +272,10 @@ const command = {
 
 **Guidelines:**
 
-- **Handle known errors** — Provide user-friendly messages
-- **Exit with status codes** — Non-zero for errors, zero for success
-- **Use logger for debug** — Set `DEBUG=1` to see detailed info
-- **Use colours wisely** — Red for errors, green for success, yellow for warnings
+- **Handle known errors**: Provide user-friendly messages
+- **Exit with status codes**: Non-zero for errors, zero for success
+- **Use logger for debug**: Set `DEBUG=1` to see detailed info
+- **Use colors wisely**: Red for errors, green for success, yellow for warnings
 
 ### Logging
 
@@ -392,10 +392,10 @@ const command = {
 
 Steps:
 
-1. **Validate** — Check required arguments and flags
-2. **Confirm** — Ask for confirmation if needed
-3. **Execute** — Do the actual work
-4. **Handle errors** — Catch and report failures
+1. **Validate**: Check required arguments and flags
+2. **Confirm**: Ask for confirmation if needed
+3. **Execute**: Do the actual work
+4. **Handle errors**: Catch and report failures
 
 ### Pattern: Batching Operations
 
@@ -411,10 +411,10 @@ const command = {
       try {
         await process(item)
         if (verbose) {
-          ctx.io.write(ctx.io.colour(`[OK] ${item}`, 'green'))
+          ctx.io.write(ctx.io.color(`[OK] ${item}`, 'green'))
         }
       } catch (err) {
-        ctx.io.write(ctx.io.colour(`[Error] ${item}: ${err.message}`, 'red'))
+        ctx.io.write(ctx.io.color(`[Error] ${item}: ${err.message}`, 'red'))
       }
     }
   },
@@ -458,5 +458,5 @@ describe('mycommand', () => {
 
 ### Next Steps
 
-- **[Examples](examples.md)** — Real-world command patterns
-- **[Architecture: Core Module](../architecture/core.md)** — How commands are dispatched
+- **[Examples](examples.md)**: Real-world command patterns
+- **[Architecture: Core Module](../architecture/core.md)**: How commands are dispatched

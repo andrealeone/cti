@@ -1,50 +1,16 @@
 ## Demos
 
-The [`/demos`](../../demos) folder holds small, self-contained example CLIs built
-with CTI. They exist to show the **real, runnable API** in context — each demo
-is a single readable file you can run, read, copy, and adapt.
+The [`/demos`](../../demos) folder holds small, self-contained example CLIs
+built with CTI, each one a single readable file you can run, read, copy, and
+adapt. They cover both onboarding patterns (`defineManifest` for a handful of
+inline commands, `discoverManifest`/filesystem discovery for many) and every
+`ctx.io` primitive.
 
-### What's there
+The full demo list, what each one demonstrates, and the exact commands to run
+them live in the demos folder's own **[README](../../demos/readme.md)**. That's
+the canonical reference, kept next to the code it describes.
 
-| Demo             | Demonstrates                                                   |
-| ---------------- | -------------------------------------------------------------- |
-| `hello-world`    | The minimal command + dispatcher                               |
-| `todo-app`       | Multiple commands, positionals, persisted state, exit codes    |
-| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), colour, spinner |
-| `api-client`     | Nested routes (`users/list`), environment-driven config        |
-| `project-init`   | Flags + filesystem scaffolding from `ctx.cwd`                  |
-| `data-transform` | Reading stdin, format conversion (json/csv/table)              |
-
-### The shape of a demo
-
-Every demo defines one or more `CommandModule`s, maps them to routes with
-`defineManifest`, and dispatches with `run` (the same runtime an installed CLI
-uses). Returning a number from `run` sets the process exit code.
-
-```typescript
-import type { CommandModule } from '../../../src/types/command'
-import type { Config } from '../../../src/types/config'
-import { defineManifest, run } from '../../../src/core/runtime'
-
-const hello: CommandModule = {
-  meta: { description: 'Greet someone' },
-  run(ctx) {
-    ctx.io.write(`Hello, ${ctx.positionals[0] ?? 'World'}!`)
-  },
-}
-
-const config: Config = { name: 'demo', version: '1.0.0', manifest: defineManifest({ hello }) }
-void run(config)
-```
-
-> Demos import the framework by **relative path** (`../../../src/...`) because they
-> live inside this repository — no install step is needed. In a published project
-> you would import from the package instead, and the manifest would be generated
-> by scanning your commands directory rather than written inline.
-
-### Running them
-
-From the repo root:
+### Quick taste
 
 ```bash
 bun run ./demos/hello-world/main.ts hello Alice
@@ -61,10 +27,6 @@ bun build ./main.ts --compile --outfile dist/hello && ./dist/hello hello Bob
 
 ### How they stay correct
 
-Every demo is exercised by a single black-box harness in
-[`tests/demos`](../../tests/demos), which spawns each CLI and checks its exit code
-and key output. If a demo breaks (or a new demo is added without expectations),
-the test suite fails. See **[Testing](../contributing/testing.md)** for details.
-
-The demos folder has its own [README](../../demos/README.md) with the full command
-list and more examples.
+A single black-box harness (`tests/demos.test.ts`) spawns every demo and checks
+its exit code and key output fragments; a demo added without a matching
+`EXPECTATIONS` entry fails the suite. See [Testing](../contributing/testing.md).

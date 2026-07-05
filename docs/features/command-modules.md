@@ -1,204 +1,129 @@
 # Command Modules
 
-A command module is the default export of a command file. It defines what the command does, what arguments it accepts, and how it runs.
-
-## Command Module Structure
-
-Every command file exports a command module with this shape:
+A command module is the default export of a command file: a plain object
+describing what the command does, what flags/positionals it accepts, and how
+it runs.
 
 ```typescript
-import { command, args, flags } from 'cti'
+import { command } from 'cti'
 
 export default command({
   meta: {
-    description: 'What this command does',
+    description: 'Apply pending database migrations',
     examples: ['app db migrate', 'app db migrate --steps 2'],
   },
   flags: {
-    steps: flags.number({ default: 1, describe: 'Migrations to apply' }),
+    steps: { type: 'number', default: 1, description: 'Migrations to apply' },
   },
-  args: [args.string({ name: 'target', required: false, describe: 'Database' })],
-  run({ flags, args, io }) {
-    io.write(`Applying ${flags.steps} migrations to ${args[0] || 'default'}`)
+  run(ctx) {
+    ctx.io.write(`Applying ${ctx.flags.steps} migration(s)`)
   },
 })
 ```
 
-## Metadata
+## The `command()` wrapper
 
-The `meta` object contains optional command information:
+`command()` is the identity function: it returns its argument unchanged. Its
+only job is giving TypeScript enough context to infer `ctx.flags`' shape from
+your `flags` declaration, so wrap every command definition with it rather than
+exporting a plain object literal.
 
 ```typescript
-meta: {
-  description: 'Describe what the command does',
-  aliases: ['migrate', 'sync'],
-  hidden: false,
-  examples: ['app db migrate', 'app db migrate --steps 5'],
+export function command<F = Record<string, unknown>>(module: CommandModule<F>): CommandModule<F> {
+  return module
 }
 ```
 
-- `description`: Short explanation for help text
-- `aliases`: Alternative names for the command
-- `hidden`: Hide from help listings
-- `examples`: Show usage in help
+It does not validate anything at load time; a malformed `FlagSpec` or missing
+`run` is caught by the TypeScript compiler (`bun run check:types`), not at
+runtime.
 
-## Flags
+## Minimal command
 
-The `flags` object defines available command-line flags:
+Only `run` is required:
 
 ```typescript
-flags: {
-  verbose: flags.boolean({ short: 'v' }),
-  count: flags.number({ default: 1 }),
-  output: flags.string({ short: 'o' }),
+export default command({
+  run(ctx) {
+    ctx.io.write('Hello!')
+  },
+})
+```
+
+## `meta`
+
+```typescript
+interface CommandMeta {
+  description?: string
+  aliases?: readonly string[]
+  hidden?: boolean
+  examples?: readonly string[]
 }
 ```
 
-Available flag methods:
+All optional, all currently just data carried on the manifest entry.
+`description`/`examples` will back generated `--help` output once that lands
+(see the [Roadmap](../future/roadmap.md)); `aliases` and `hidden` are likewise
+reserved for the help/routing system, not yet read anywhere.
 
-- `flags.string(...)` — Text value
-- `flags.number(...)` — Numeric value
-- `flags.boolean(...)` — True/false flag
-
-## Arguments
-
-The `args` array defines positional arguments:
+## `flags` and `args`
 
 ```typescript
-args: [
-  args.string({ name: 'source', required: true }),
-  args.string({ name: 'dest', required: false }),
-  args.rest({ name: 'extra' }),
-]
+export default command({
+  flags: {
+    verbose: { type: 'boolean', short: 'v' },
+    output: { type: 'string', short: 'o' },
+  },
+  args: [{ name: 'target', required: false }],
+  run(ctx) {
+    // ctx.flags.verbose, ctx.flags.output: parsed and typed
+    // ctx.positionals[0]: the raw string; args[] is descriptive only today
+  },
+})
 ```
 
-Available arg methods:
+See [Flag Parsing](flag-parsing.md) and [Positional Arguments](positional-arguments.md)
+for the full spec of each, including what's enforced today versus documented
+for later.
 
-- `args.string(...)` — Text argument
-- `args.number(...)` — Numeric argument
-- `args.rest(...)` — Remaining arguments
+## Nested commands
 
-## Run Handler
-
-The `run` function is the command's implementation:
-
-```typescript
-run({ flags, positionals, route, io, logger, config, cwd, env }) {
-  // Command logic here
-  // Can be async: run: async ({ ... }) => { ... }
-}
-```
-
-Returns:
-
-- Nothing (exit code 0)
-- A number (exit code)
-- A Promise (async handler)
-
-## Nested Commands
-
-Nested commands work the same way. A file at `commands/db/migrate.ts` defines the nested command:
+A file at `commands/db/migrate.ts` is the `db migrate` command. Nesting is
+purely a filesystem convention; the module shape doesn't change:
 
 ```typescript
 // commands/db/migrate.ts
 export default command({
-  describe: 'Run pending migrations',
-  run({ io }) {
-    io.write('Running migrations...')
+  meta: { description: 'Run pending migrations' },
+  run(ctx) {
+    ctx.io.write('Running migrations...')
   },
 })
 ```
 
-Invoked as:
+See [Command Routing](command-routing.md).
 
-```bash
-app db migrate
-```
+## The `run` handler
 
-## Type Safety
-
-Flags and arguments are fully typed:
+Receives one argument, the `Context`. Destructure what you need or take it
+whole:
 
 ```typescript
-flags: {
-  port: flags.number()
-}
-run({ flags }) {
-  // flags.port is a number, no casting needed
-  const url = `http://localhost:${flags.port}`
-}
+run(ctx) { /* ctx.flags, ctx.positionals, ctx.io, ... */ }
+run({ flags, io }) { /* only what you use */ }
+run: async (ctx) => { await doWork(ctx) }
 ```
 
-## The command() Wrapper
-
-Always wrap command definitions with `command()`:
-
-```typescript
-export default command({
-  // ...
-})
-```
-
-The wrapper:
-
-- Validates the command definition
-- Ensures type consistency
-- Provides error messages at load time
-- Is the only extension point for future CTI features
-
-## Minimal Command
-
-A command needs only a `run` function:
-
-```typescript
-export default command({
-  run({ io }) {
-    io.write('Hello!')
-  },
-})
-```
-
-Everything else is optional.
-
-## Context Parameter
-
-The `run` handler receives one parameter, the context:
+## Exit codes
 
 ```typescript
 run(ctx) {
-  // All properties available on ctx
-}
-
-// Or destructure what you need:
-run({ flags, io }) {
-  // Only using flags and io
-}
-```
-
-## Async Handlers
-
-Make handlers async for long-running operations:
-
-```typescript
-run: async ({ io }) => {
-  const spinner = io.spinner('Processing...')
-  await longOperation()
-  spinner.succeed()
-}
-```
-
-## Exit Codes
-
-Return an exit code:
-
-```typescript
-run({ io }) {
-  if (error) {
-    io.writeError('Failed!')
-    return 1  // Exit with error code
+  if (somethingWrong) {
+    ctx.io.writeError('Failed!')
+    return 1
   }
-  return 0   // Success
+  return 0
 }
 ```
 
-If no value is returned, exit code is 0.
+Returning nothing is equivalent to `0`.

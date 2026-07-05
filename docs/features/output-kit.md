@@ -1,71 +1,52 @@
 # Output Kit
 
-The output kit provides a TTY-aware interface for writing to stdout/stderr, coloring text, showing spinners, and prompting users. All methods respect `NO_COLOR` and gracefully degrade when output is not a terminal.
-
-## Io Interface
-
-Every command receives an `io` object in the context with these methods:
+`ctx.io` is the TTY-aware interface for everything a command writes to the
+terminal or asks the user: plain output, color, spinners, and prompts.
 
 ```typescript
-export interface Io {
+interface Io {
   isTTY: boolean
+  color: (text: string, color: Color) => string
   write: (text: string) => void
   writeError: (text: string) => void
-  colour: (text: string, colour: Colour) => string
   spinner: (text: string) => SpinnerHandle
   prompt: (question: string) => Promise<string>
-  confirm: (question: string) => Promise<boolean>
-  select: <T extends string>(question: string, choices: T[]) => Promise<T>
+  confirm: (question: string, fallback?: boolean) => Promise<boolean>
+  select: <T extends string>(question: string, choices: readonly T[]) => Promise<T>
 }
 ```
 
-## Writing Output
-
-Use `io.write()` for normal output and `io.writeError()` for errors:
+## Writing output
 
 ```typescript
-run({ io }) {
-  io.write('Operation complete')
-  io.writeError('Something went wrong')
+run(ctx) {
+  ctx.io.write('Operation complete')
+  ctx.io.writeError('Something went wrong')
 }
 ```
 
-Both methods add a newline automatically.
+`write` goes to stdout, `writeError` to stderr; both append a newline.
 
-## TTY Detection
-
-Check whether output is a terminal:
+## `isTTY`
 
 ```typescript
-run({ io }) {
-  if (io.isTTY) {
-    // Interactive features available
-    io.write('Running in terminal')
+run(ctx) {
+  if (ctx.io.isTTY) {
+    // interactive terminal
   } else {
-    // Piped output
-    io.write('Running in pipe')
+    // piped, redirected, or run in CI
   }
 }
 ```
 
-When not a TTY, interactive features degrade gracefully.
+## `NO_COLOR` / `FORCE_COLOR`
 
-## NO_COLOR Support
+`color()` respects the [NO_COLOR](https://no-color.org) convention and the
+`FORCE_COLOR` override automatically. See [Colors](colors.md).
 
-The output kit respects the `NO_COLOR` environment variable. When set, all color is stripped regardless of TTY status. This follows the [NO_COLOR](https://no-color.org) standard.
+## What's implemented vs. stubbed
 
-```bash
-NO_COLOR=1 app command  # No colors in output
-```
-
-## FORCE_COLOR Support
-
-Force color output even when not a TTY:
-
-```bash
-FORCE_COLOR=1 app command | cat  # Colors preserved
-```
-
-## Availability
-
-The output kit is always available through `ctx.io`, regardless of the command's purpose or context.
+`write`, `writeError`, `color`, and `isTTY` are fully implemented. `spinner`,
+`prompt`, `confirm`, and `select` are stable interfaces backed by no-op stubs
+today. See [Spinners](spinners.md), [Prompts](prompts.md), and the
+[Roadmap](../future/roadmap.md).

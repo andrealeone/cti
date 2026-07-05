@@ -1,12 +1,10 @@
 # Command Routing
 
-CTI routes commands based on the file structure of your `commands` directory. Each file becomes a command, with the directory hierarchy defining the command path.
+CTI routes commands from the file structure of your `commands` directory (or an
+inline manifest; see [Manifest](manifest.md)). Each command file becomes a
+route; directory nesting becomes a command path.
 
-## How It Works
-
-Commands are discovered through a manifest system that maps routes to command modules. The routing is deterministic and follows a longest-prefix matching strategy.
-
-**File Structure to Route Mapping:**
+## File structure to route mapping
 
 ```
 commands/
@@ -18,36 +16,31 @@ commands/
     └── add.ts         → app remote add
 ```
 
-## Route Resolution
+There's no limit to nesting depth, and `index.ts` collapses into its parent's
+route (`commands/db/index.ts` → `app db`).
 
-When a user runs a command like `app db migrate`, CTI:
+## Route resolution
 
-1. Splits the command arguments into route segments and remaining arguments
-2. Walks the manifest for the deepest matching entry
-3. If no exact match is found, routes to the nearest group help
-4. Parses remaining arguments with the matched command's flags
+When a user runs `app db migrate --force extra`, the router:
 
-## Nested Commands
+1. Tries the **longest** possible prefix of the arguments against the manifest
+   (`db migrate --force extra`, then `db migrate --force`, ... down to `db`)
+2. The first prefix that matches a route wins; everything after it becomes
+   `remaining`, the argv the parser sees
+3. `db migrate` matches, so `remaining = ['--force', 'extra']` is parsed
+   against `db migrate`'s `flags`, and `'extra'` ends up in `ctx.positionals`
 
-Subcommands are created by nesting files in subdirectories. There's no limit to nesting depth:
+If nothing matches, `run()` writes `Unknown command: ...` to stderr and
+resolves to exit code `1`. There is no group-level help yet for a partial
+route like `app db` with no matching leaf command. See the
+[Roadmap](../future/roadmap.md) for planned `--help` generation.
 
-```
-commands/
-├── config/
-│   ├── get.ts         → app config get
-│   ├── set.ts         → app config set
-│   └── view/
-│       └── all.ts     → app config view all
-```
+## Route arrays
 
-## Command Groups
+Internally a route is a `string[]`: `commands/db/migrate.ts` becomes
+`['db', 'migrate']`, available in every handler as `ctx.route`.
 
-A directory without a leaf command file acts as a group. Running `app db` without a subcommand prints help for available db subcommands.
+## See also
 
-## Route Arrays
-
-Internally, routes are represented as string arrays. The file `commands/db/migrate.ts` becomes the route `['db', 'migrate']`, which is available in the context as `ctx.route`.
-
-## Manifest System
-
-In development, routes are discovered at runtime from the file system. When compiled into a binary, CTI uses a pre-generated manifest that maps all routes statically, ensuring identical behavior under `bun run` and in compiled binaries.
+- [Manifest](manifest.md): how routes are built, from a file tree or an inline map
+- [Core Module](../architecture/core.md): `buildRouteLookup` / `resolveRoute` implementation

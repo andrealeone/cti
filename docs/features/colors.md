@@ -1,71 +1,53 @@
 # Colors
 
-CTI provides a simple color interface using ANSI escape sequences. The coloring layer respects `NO_COLOR` and only applies colors when output is a terminal.
+CTI wraps text in ANSI escape codes through `ctx.io.color()`. Output is only
+colored when it makes sense to: a real terminal, and the user hasn't opted out.
 
-## Color Function
-
-Use `io.colour()` to wrap text with color:
+## `io.color(text, color)`
 
 ```typescript
-run({ io }) {
-  const success = io.colour('Done!', 'green')
-  const error = io.colour('Failed!', 'red')
-  io.write(success)
-  io.writeError(error)
+run(ctx) {
+  const success = ctx.io.color('Done!', 'green')
+  const error = ctx.io.color('Failed!', 'red')
+  ctx.io.write(success)
+  ctx.io.writeError(error)
 }
 ```
 
-## Available Colors
+## Available colors
 
-CTI supports these ANSI colors:
+Seven semantic colors: `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`,
+`gray`. Enough to cover errors, success, warnings, and de-emphasis without
+turning into a design system.
 
-- `red` — For errors and warnings
-- `green` — For success messages
-- `yellow` — For warnings and caution
-- `blue` — For informational text
-- `magenta` — For emphasis
-- `cyan` — For secondary information
-- `gray` — For de-emphasized text
-
-## TTY Awareness
-
-Color codes are only added when output is a terminal (TTY). When piped or redirected, the plain text is returned:
+## TTY-aware by default
 
 ```bash
-app command              # Colors applied if terminal
-app command | cat        # No colors in output
-NO_COLOR=1 app command   # No colors even if terminal
+app command              # colored, if stdout is a terminal
+app command | cat        # plain text, since stdout is piped
+NO_COLOR=1 app command   # plain text, an explicit opt-out
 ```
 
-## Composable Output
+`io.color()` already checks this for you. Call it unconditionally and it does
+the right thing in every context.
 
-Build colored output by combining the color function with strings:
+## `NO_COLOR` and `FORCE_COLOR`
+
+```bash
+NO_COLOR=1 app command      # never color, even in a terminal
+FORCE_COLOR=1 app command   # always color, even when piped
+```
+
+`NO_COLOR` wins if both are set. See [Utils: TTY Detection](../architecture/utils.md).
+
+## Composing colored output
 
 ```typescript
-run({ io }) {
-  const status = io.colour('[OK]', 'green')
-  const msg = `${status} Operation complete`
-  io.write(msg)
+run(ctx) {
+  const status = ctx.io.color('[OK]', 'green')
+  ctx.io.write(`${status} Operation complete`)
 }
 ```
 
-## Respecting NO_COLOR
-
-The `NO_COLOR` environment variable disables all coloring. This is useful for CI/CD pipelines and logging systems that don't support ANSI codes.
-
-```bash
-NO_COLOR=1 app command  # Returns plain text
-```
-
-## ANSI Directly
-
-The color function uses ANSI escape sequences. For custom styling, use the codes directly:
-
-```typescript
-// Gray text
-const gray = '\x1b[90mText\x1b[0m'
-```
-
-## Performance
-
-The color function is pure and has no side effects. It's safe to call for every line of output without performance concerns.
+`color()` is pure and has no side effects, so it's safe to call for every line
+without a performance concern.

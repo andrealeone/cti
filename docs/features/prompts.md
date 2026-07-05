@@ -1,111 +1,49 @@
 # Prompts
 
-CTI provides interactive prompting for text input, yes/no confirmation, and multiple choice selection. All prompts respect TTY mode and degrade when output is piped.
+`ctx.io` exposes three prompt primitives (`prompt`, `confirm`, `select`) for
+asking the user something. **All three are currently stubs**: none of them
+read stdin yet. The interface is final; the implementation is a tracked
+[Roadmap](../future/roadmap.md) item, so code written against it today keeps
+working unchanged once it's real.
 
-## Text Prompts
-
-Prompt for a single line of text:
+## Current behavior
 
 ```typescript
-run({ io }) {
-  const name = await io.prompt('What is your name?')
-  io.write(`Hello, ${name}!`)
-}
+await ctx.io.prompt('Your name?') // always resolves to ''
+await ctx.io.confirm('Continue?') // always resolves to false (or `fallback`)
+await ctx.io.select('Pick one', ['a', 'b']) // always resolves to 'a', the first choice
 ```
 
-The prompt waits for input and returns the entered text.
+This holds regardless of `isTTY`; the stub doesn't check it.
 
-## Confirmation Prompts
-
-Ask a yes/no question:
+## The intended shape
 
 ```typescript
-run({ io }) {
-  const confirmed = await io.confirm('Are you sure?')
-  if (confirmed) {
-    io.write('Proceeding...')
-  }
-}
-```
-
-Returns `true` or `false`.
-
-## Selection Prompts
-
-Offer multiple choices:
-
-```typescript
-run({ io }) {
-  const choice = await io.select('Choose an option:', [
-    'Option A',
-    'Option B',
-    'Option C'
+run(ctx) {
+  const name = await ctx.io.prompt('What is your name?')
+  const confirmed = await ctx.io.confirm('Are you sure?', false)
+  const choice = await ctx.io.select('Choose an environment:', [
+    'development', 'staging', 'production',
   ] as const)
-  io.write(`You chose: ${choice}`)
 }
 ```
 
-The user selects one option and it's returned.
+`confirm`'s second argument is the fallback used both when the stub is active
+and, once implemented, when input can't be read (non-TTY, closed stdin);
+it defaults to `false`.
 
-## Non-Interactive Fallback
+## Writing code that survives the upgrade
 
-When output is not a TTY (piped), prompts:
-
-- For text prompts: Return an empty string
-- For confirmations: Return the fallback value (defaults to `false`)
-- For selections: Return the first choice
-
-This prevents commands from hanging when run non-interactively.
-
-## Usage in Scripts
-
-Prompts are safe to use even in non-interactive contexts:
+Don't special-case the stub. Write handlers against the real interface:
 
 ```typescript
-run({ io }) {
-  if (io.isTTY) {
-    const response = await io.prompt('Proceed?')
-    // handle response
-  } else {
-    // Skip prompt, use default
-  }
+run(ctx) {
+  const proceed = await ctx.io.confirm('Deploy to production?', false)
+  if (!proceed) return 0
+  // ...
 }
 ```
 
-Or rely on automatic fallbacks:
-
-```typescript
-// This works in interactive and non-interactive mode
-const confirmed = await io.confirm('Continue?', false)
-```
-
-## Async Nature
-
-Prompts are async and must be awaited:
-
-```typescript
-run({ io }) {
-  const input = await io.prompt('Enter value:')
-  // Use input here
-}
-```
-
-## Validation
-
-Validate input by prompting again on failure:
-
-```typescript
-run({ io }) {
-  let port: number
-  while (true) {
-    const input = await io.prompt('Enter port:')
-    port = parseInt(input, 10)
-    if (port > 0 && port < 65536) break
-    io.write('Invalid port. Try again.')
-  }
-}
-```
-
-## User Experience
-
-Prompts are interactive only in terminals. In automated environments (CI/CD, scripts), they gracefully fall back to defaults, keeping your CLI usable everywhere.
+Today this always skips the deploy (confirm resolves to `false`); once prompts
+are implemented, the same code starts asking the user for real, with no
+rewrite needed.

@@ -1,49 +1,63 @@
 ## Core Concepts
 
-CTI's conceptual model is deliberately small. Understand these ideas and you understand the framework.
+CTI's conceptual model is deliberately small: **commands**, a **manifest** that
+maps routes to them, and a **runtime** that dispatches one to the other. Understand
+these three ideas, and the rest of the framework (flags, context, I/O) falls into
+place around them.
+
+### Layout
+
+```
+┌─────────────────────────────────────────┐
+│              Your Commands               │
+├─────────────────────────────────────────┤
+│  Runtime + Router  (dispatch, routing)   │
+├─────────────────────────────────────────┤
+│  Parser            (argv → typed data)   │
+├─────────────────────────────────────────┤
+│  I/O                (color, prompts)      │
+├─────────────────────────────────────────┤
+│  Types             (contracts)           │
+├─────────────────────────────────────────┤
+│  Utils             (coercion, TTY)       │
+├─────────────────────────────────────────┤
+│        Bun & Node.js standard library    │
+└─────────────────────────────────────────┘
+```
+
+Each layer only talks to the one below it. The router doesn't parse arguments;
+it asks the parser. The parser doesn't know about colors or TTYs; that's I/O's
+job. Utilities are stateless and depend on nothing else in the tree.
 
 ### Commands
 
-A **command** is the basic unit of work in CTI. It's a module that receives parsed arguments and a context object.
+A **command** is a module: a plain object with an optional `meta`, optional
+`flags`/`args`, and a `run(ctx)` function.
 
 ```typescript
-const deployCommand = {
-  meta: { description: 'Deploy to production' },
-  run: async (ctx: Context) => {
-    const env = ctx.flags.environment
-    ctx.io.write(`Deploying to ${env}...`)
+const deploy = {
+  meta: { description: 'Deploy to an environment' },
+  flags: {
+    environment: { type: 'string', default: 'staging' },
   },
-} satisfies CommandModule
-```
-
-A command is:
-
-- **Explicit.** You see exactly what it does. No hidden routing, no magic.
-- **Typed.** The `CommandModule` interface ensures consistency.
-- **Composable.** Commands can call other commands or share utilities through plain modules.
-
-### Context
-
-The **Context** object is passed to every command. It's your access point to the runtime:
-
-```typescript
-interface Context {
-  flags: Record<string, unknown> // Parsed flags
-  positionals: string[] // Positional arguments
-  route: string[] // Command path (e.g., ['deploy', 'staging'])
-  cwd: string // Current working directory
-  env: Record<string, string | undefined> // Environment variables
-  config: Config // Application configuration
-  io: Io // I/O interface (colours, prompts, spinners)
-  logger: Logger // Structured logging
+  run(ctx) {
+    ctx.io.write(`Deploying to ${ctx.flags.environment}...`)
+  },
 }
 ```
 
-Context is your window into the runtime. Need environment variables? `ctx.env`. Want to write coloured output? `ctx.io.colour()`.
+Wrap it with `command()` (an identity function from `cti`) so the compiler
+infers the flag types correctly:
+
+```typescript
+import { command } from 'cti'
+
+export default command({ ... })
+```
 
 ### Manifest
 
-A **manifest** describes your CLI's commands and their loading strategy.
+A **manifest** is the map from route to command module CTI dispatches against:
 
 ```typescript
 interface Manifest {
@@ -51,113 +65,150 @@ interface Manifest {
 }
 
 interface ManifestEntry {
-  route: string[]                              // e.g., ['deploy', 'aws']
-  sourcePath: string                           // File path to the command
-  importer: () => Promise<{ default: ... }>  // How to load the command
-  meta?: CommandMeta                           // Metadata (description, examples)
+  route: string[] // e.g. ['deploy', 'aws']
+  sourcePath: string
+  importer: () => Promise<{ default: CommandModule }>
+  meta?: CommandMeta
 }
 ```
 
-The manifest is CTI's internal contract. It maps command names to modules, allowing lazy loading (only load a command when it's invoked).
+You never build this by hand. Two functions produce it:
+
+- **`defineManifest(routes)`** turns an in-memory `{ 'deploy/aws': awsDeploy }`
+  map into a `Manifest`. Good for a handful of commands in one file.
+- **`discoverManifest(commandsDir)`** walks a directory of `.ts` files at
+  runtime and turns the file tree into routes. Good for CLIs with many commands.
+
+Both produce the same `Manifest` shape, so the router never knows or cares which
+one built it. See [Manifest](../features/manifest.md) for the full picture.
 
 ### Runtime
 
-The **runtime** is the entry point of your CLI. The `run()` dispatcher:
-
-1. Accepts your config, which carries (or points to) a manifest of available commands
-2. Resolves the command to invoke (longest-prefix match)
-3. Loads the matched command module lazily
-4. Parses and coerces incoming arguments
-5. Builds the context and invokes the handler
-6. Returns the process exit code
+The **runtime** is `run()`, the dispatcher every entrypoint calls once:
 
 ```typescript
-import { defineManifest, run } from './core/runtime'
+import { run } from 'cti'
 
-const config: Config = { ...baseConfig, manifest: defineManifest({ hello, goodbye }) }
-void run(config)
+void run({ name: 'my-cli', version: '1.0.0' }, import.meta)
 ```
 
-`defineManifest` maps slash-delimited routes (`'users/list'`) to command modules and is assigned to `config.manifest`; `run` does the dispatch. Route resolution and parsing live in the `router` and `parser` modules, which `run` composes.
+Given a config and (when discovering commands from disk) `import.meta`, `run()`:
 
-### Flags and Arguments
+1. Resolves a manifest: `config.manifest` if you set one, otherwise
+   `discoverManifest(config.commandsDir ?? 'commands')`
+2. Matches `argv` against the manifest using **longest-prefix routing**, so
+   `users get 1` resolves to `users/get` with `['1']` left over as positionals
+3. Lazily imports the matched command's module
+4. Parses and coerces the remaining argv against the command's `flags`
+5. Builds the `Context` and calls `command.run(ctx)`
+6. Returns the process exit code (the handler's numeric return, or `0`)
 
-CTI distinguishes between **flags** (named options) and **positionals** (ordered arguments).
+```
+argv: ['deploy', '--env=prod', 'src/']
+  │
+  ▼
+resolveRoute()  ──►  matches 'deploy', remaining = ['--env=prod', 'src/']
+  │
+  ▼
+parseAndCoerce() ──► { values: { env: 'prod' }, positionals: ['src/'] }
+  │
+  ▼
+Context built  ──►  { flags, positionals, route, cwd, env, config, io, logger }
+  │
+  ▼
+command.run(ctx)  ──►  exit code
+```
+
+Unknown routes and thrown errors are caught by `run()` itself: it writes to
+stderr and resolves to exit code `1` rather than throwing out of your entrypoint.
+
+### Flags and positionals
+
+CTI distinguishes **flags** (named, declared in `flags`) from **positionals**
+(everything else, in order):
 
 ```bash
 my-cli deploy --environment=prod --verbose src/ dist/
 ```
 
-This parses as:
-
 ```typescript
-ctx.flags = {
-  environment: 'prod',
-  verbose: true,
-}
+ctx.flags = { environment: 'prod', verbose: true }
 ctx.positionals = ['src/', 'dist/']
 ```
 
-Flags are declared in the command:
+Flags are declared with a `FlagSpec`, a plain object, not a builder call:
 
 ```typescript
-const command = {
-  flags: {
-    environment: { type: 'string', default: 'staging' },
-    verbose: { type: 'boolean', short: 'v' },
-  },
-  run: async (ctx) => {
-    /* ... */
-  },
+flags: {
+  environment: { type: 'string', default: 'staging' },
+  verbose: { type: 'boolean', short: 'v' },
 }
 ```
 
-Positionals are accessed dynamically: `ctx.positionals[0]`, `ctx.positionals[1]`, etc.
+See [Flag Parsing](../features/flag-parsing.md) and [Positional Arguments](../features/positional-arguments.md).
 
 ### Configuration
 
-**Configuration** is the `Config` object you pass to `run()`: the CLI's name, bin, version, manifest (or `commandsDir` to discover one), and any other static data your commands need at runtime.
-
-CTI doesn't impose a loader or enforce where config comes from. Build the object however suits you—a literal, parsed JSON/YAML, or environment variables—and hand it to `run`.
-
-```typescript
-const config: Config = { name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) }
-void run(config)
-```
-
-Configuration is then available to every command via `ctx.config`.
-
-### I/O Interface
-
-The **I/O interface** provides primitives for user interaction:
+**`Config`** is the object you pass to `run()`: name, version, and either a
+`manifest` or a `commandsDir` to discover one from.
 
 ```typescript
-interface Io {
-  isTTY: boolean // Is stdout interactive?
-  colour: (text: string, colour: Colour) => string // Coloured text
-  write: (text: string) => void // Write to stdout
-  writeError: (text: string) => void // Write to stderr
-  spinner: (text: string) => SpinnerHandle // Loading indicator
-  prompt: (question: string) => Promise<string> // User input
-  confirm: (question: string) => Promise<boolean> // Yes/no prompt
-  select: (question: string, choices) => Promise // Choose from list
+interface Config {
+  name: string
+  version: string
+  commandsDir?: string
+  targets?: string[]
+  bin?: string
+  manifest?: Manifest
 }
 ```
 
-These are straightforward, synchronous-where-possible, and designed for CLI patterns.
+CTI doesn't impose a config *loader*: build the object however suits you and
+hand it to `run()`. It's available to every command via `ctx.config`.
 
----
+### I/O
 
-### How They Fit Together
+The **`Io`** interface is your window into the terminal: writing output,
+coloring it, showing a spinner, or asking the user something.
 
-When a user invokes your CLI:
+```typescript
+interface Io {
+  isTTY: boolean
+  color: (text: string, color: Color) => string
+  write: (text: string) => void
+  writeError: (text: string) => void
+  spinner: (text: string) => SpinnerHandle
+  prompt: (question: string) => Promise<string>
+  confirm: (question: string, fallback?: boolean) => Promise<boolean>
+  select: <T extends string>(question: string, choices: readonly T[]) => Promise<T>
+}
+```
 
-1. **Argument parsing** — Shell breaks `my-cli deploy --env=prod src/` into tokens
-2. **Manifest resolution** — Router looks up `deploy` in the manifest
-3. **Command loading** — Command module is imported lazily
-4. **Context creation** — `Context` is built with parsed flags, positionals, env, etc.
-5. **Execution** — Command's `run()` function is invoked with the context
-6. **I/O** — Command uses `ctx.io` to interact with the user
-7. **Exit** — Process exits with status code (0 = success, non-zero = error)
+`write`/`writeError`/`color` are fully implemented today. `spinner`, `prompt`,
+`confirm`, and `select` are stable interfaces backed by no-op stubs right now;
+see [Prompts](../features/prompts.md), [Spinners](../features/spinners.md), and
+the [Roadmap](../future/roadmap.md) for what's landing next.
 
-That's the entire flow. Understand it, and you understand CTI.
+### Putting it together
+
+```typescript
+import { command, run } from 'cti'
+
+const hello = command({
+  meta: { description: 'Greet someone' },
+  run(ctx) {
+    ctx.io.write(`Hello, ${ctx.positionals[0] ?? 'World'}!`)
+  },
+})
+
+void run({ name: 'my-cli', version: '1.0.0' }, import.meta)
+```
+
+Drop `hello`'s file in `commands/hello.ts`, and `run()` discovers it automatically,
+with no manifest to write by hand. That's the entire mental model.
+
+### Next
+
+- **[Building Commands](../guides/building-commands.md)**: practical patterns
+- **[Architecture](../architecture/core.md)**: how `run()` is implemented, module by module
+- **[API Reference](../reference/api-reference.md)**: every type and function

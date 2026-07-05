@@ -1,45 +1,48 @@
-## CTI CLI Documentation
+## CTI Documentation
 
-A complete guide to CTI—a Bun-native TypeScript CLI framework built on the belief that CLI development should be straightforward, not laborious.
+A complete guide to CTI, a Bun-native TypeScript framework for building
+command-line tools.
 
-### Start Here
+```
+principles/          why CTI exists, what it trades off
+getting-started/      five minutes to a working CLI
+concepts/              the mental model: commands, manifest, runtime
+guides/                 patterns, examples, runnable demos
+features/              one page per user-facing capability
+architecture/          how each module is actually built
+reference/              full type & function reference
+contributing/           dev workflow, testing
+future/                 roadmap
+```
 
-**New to CTI?**
+### New to CTI?
 
-- **[Vision & Philosophy](principles/vision.md)** — Why CTI exists and what we're building
-- **[Quick Start](getting-started/quickstart.md)** — Five minutes from nothing to your first command
-- **[Core Concepts](concepts/core-concepts.md)** — The mental model behind CTI
+1. **[Quick Start](getting-started/quickstart.md)**: install, first command, first flag, compiled binary
+2. **[Core Concepts](concepts/core-concepts.md)**: commands, manifest, runtime, in one page
+3. **[Vision](principles/vision.md)** and **[Philosophy](principles/philosophy.md)** explain why CTI exists and what it deliberately leaves out
 
-**Convinced? Ready to build?**
+### Building a CLI
 
-- **[Building Commands](guides/building-commands.md)** — Practical patterns and best practices
-- **[Examples](guides/examples.md)** — Real-world usage snippets
-- **[Demos](guides/demos.md)** — Runnable example CLIs in [`/demos`](../demos) you can read, run, and adapt
-- **[API Reference](reference/api-reference.md)** — Type definitions and exports
+- **[Building Commands](guides/building-commands.md)**: flags, positionals, I/O, error handling, testing
+- **[Examples](guides/examples.md)**: real-world command patterns to copy
+- **[Demos](guides/demos.md)**: runnable example CLIs in [`/demos`](../demos)
+- **[Features](features/)**: one page per capability, including [flags](features/flag-parsing.md), [positionals](features/positional-arguments.md), [routing](features/command-routing.md), [manifest](features/manifest.md), [colors](features/colors.md), [prompts](features/prompts.md), [spinners](features/spinners.md), and [logger](features/logger.md)
 
-### Understanding CTI
+### Understanding the internals
 
-Deep dives into how CTI is designed and why:
-
-**Architecture & Design**
-
-- **[System Overview](architecture/system-design.md)** — How the pieces fit together
-- **[Core Module](architecture/core.md)** — Router and argument parsing
-- **[I/O System](architecture/io.md)** — Colours, prompts, spinners, and terminal integration
-- **[Type System](architecture/types.md)** — Strong typing for commands and configuration
-- **[Utilities](architecture/utils.md)** — Helper functions (coercion, TTY detection)
-
-**Why These Choices?**
-
-- **[Value Proposition](principles/value-proposition.md)** — What makes CTI worth your time
-- **[Comparison & Trade-offs](principles/philosophy.md)** — How CTI differs from other frameworks
+- **[Core Module](architecture/core.md)**: runtime, router, parser
+- **[I/O System](architecture/io.md)**: color, spinner, prompt, logger implementations
+- **[Type System](architecture/types.md)**: every interface, and why it's shaped that way
+- **[Utilities](architecture/utils.md)**: coercion, TTY detection
+- **[API Reference](reference/api-reference.md)**: the complete type and function list
 
 ### Contributing
 
-- **[Contribution Guide](contributing/guide.md)** — Development workflow, testing, code style
-- **[Testing](contributing/testing.md)** — How [`/tests`](../tests) is structured (unit, e2e, demos) and how to run it
-- **[Roadmap](future/roadmap.md)** — Where CTI is heading
+- **[Contributing Guide](contributing/guide.md)**: setup, workflow, code style, bug reports
+- **[Testing](contributing/testing.md)**: the three test layers and how to run them
+- **[Roadmap](future/roadmap.md)**: what's done, what's next, and why it's prioritized that way
 
 ---
 
-**CTI is built on [Bun](https://bun.sh) and TypeScript.** It compiles to standalone binaries with zero runtime overhead. Everything in these docs reflects that reality.
+Docs describe the current source, not aspirations. If a page and the code
+disagree, the code wins and the page is a bug: report it like any other.

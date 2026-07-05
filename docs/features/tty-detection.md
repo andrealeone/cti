@@ -1,10 +1,20 @@
 # TTY Detection
 
-TTY detection determines whether the command's output is connected to a terminal (interactive) or piped/redirected (non-interactive). CTI uses this to adapt output and interactivity.
+CTI checks whether stdout is connected to a terminal (interactive) or piped
+(to a file, another process, or a CI log) and adapts color, spinners, and
+prompts accordingly.
 
-## What Is a TTY?
+## `ctx.io.isTTY`
 
-A TTY (teletypewriter) is a terminal device. When stdout/stderr is connected to a terminal, it's a TTY. When piped or redirected to a file, it's not.
+```typescript
+run(ctx) {
+  if (ctx.io.isTTY) {
+    ctx.io.write('Interactive mode')
+  } else {
+    ctx.io.write('Non-interactive mode')
+  }
+}
+```
 
 ```bash
 app command              # stdout is a TTY
@@ -12,111 +22,40 @@ app command | cat        # stdout is not a TTY
 app command > file.txt   # stdout is not a TTY
 ```
 
-## Checking TTY Status
+## What changes with TTY status
 
-Every command can check if it's running interactively:
+| Interactive (TTY)     | Non-interactive (piped/redirected) |
+| ---------------------- | ----------------------------------- |
+| Colors applied          | Colors stripped                     |
+| Spinners animate*        | Spinners print once, no animation*   |
+| Prompts read input*       | Prompts return their fallback*        |
+
+\* Spinner and prompt implementations are currently no-op stubs. See
+[Spinners](spinners.md) and [Prompts](prompts.md). Color is the one primitive
+that's fully wired to TTY detection today.
+
+## `NO_COLOR` / `FORCE_COLOR`
+
+```bash
+NO_COLOR=1 app command             # no color, even in a terminal
+FORCE_COLOR=1 app command | cat    # color, even when piped
+```
+
+`io.color()` already checks these; call it unconditionally:
 
 ```typescript
-run({ io }) {
-  if (io.isTTY) {
-    // Running in a terminal
-    io.write('Interactive mode')
-  } else {
-    // Piped or redirected
-    io.write('Non-interactive mode')
-  }
+run(ctx) {
+  ctx.io.write(ctx.io.color('Done', 'blue'))
 }
 ```
 
-## Adaptive Behavior
-
-CTI adapts behavior based on TTY status:
-
-**In a TTY:**
-
-- Colors are applied
-- Spinners animate
-- Prompts work normally
-
-**Not a TTY:**
-
-- Colors are stripped
-- Spinners output text without animation
-- Prompts return defaults
-- Output remains clean and parseable
-
-## NO_COLOR Support
-
-Respect the `NO_COLOR` environment variable to disable colors regardless of TTY:
-
-```bash
-NO_COLOR=1 app command  # No colors even in terminal
-```
-
-## FORCE_COLOR Support
-
-Force colors even when not a TTY:
-
-```bash
-FORCE_COLOR=1 app command | cat  # Colors preserved in pipe
-```
-
-## Practical Example
-
-Build commands that work everywhere:
+## Implementation
 
 ```typescript
-run({ io }) {
-  const status = io.isTTY ? io.colour('[OK]', 'green') : '[OK]'
-  io.write(`${status} Operation complete`)
-
-  // Or let io.colour handle it automatically
-  io.write(io.colour('Done', 'blue'))
+export function isTTY(): boolean {
+  return process.stdout.isTTY === true
 }
 ```
 
-The `colour` function already respects TTY, so you can use it always.
-
-## Graceful Degradation
-
-The I/O kit degrades gracefully:
-
-- **Spinners**: Still work, but output once without animation
-- **Colors**: Stripped when not a TTY
-- **Prompts**: Return defaults without displaying anything
-- **Output**: Always works
-
-This ensures your CLI works:
-
-- In terminals
-- In pipes and redirects
-- In CI/CD systems
-- In scripts and automation
-
-## Environment Detection
-
-TTY detection uses `process.stdout.isTTY` (or similar for stderr). This is reliable across platforms.
-
-## Use Cases
-
-TTY detection is useful for:
-
-- Choosing between human-readable and machine-readable output
-- Deciding whether to show progress indicators
-- Enabling/disabling interactive features
-- Adapting output formatting
-
-## Universal CLI Design
-
-Design commands that work everywhere:
-
-```typescript
-// Good: Works in terminal, in pipes, in CI
-const result = io.colour('Success', 'green')
-io.write(result)
-
-// Bad: Only works in terminal
-io.write(io.spinner('...')) // Confusing in non-TTY
-```
-
-The output kit handles these concerns for you automatically.
+Reliable across platforms; this is the same check Node and Bun use internally.
+See [Utils](../architecture/utils.md).

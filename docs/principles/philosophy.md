@@ -1,157 +1,80 @@
 ## Philosophy
 
-### Design Principles
+### Explicit over implicit
 
-#### Explicit Over Implicit
+CTI has no hidden conventions or surprise behaviors:
 
-CTI does not use magic. There are no hidden conventions, auto-discovery mechanisms, or surprise behaviours.
+- Commands are files; a route is the file's path. No annotations, no decorators, no registration step.
+- Configuration is explicit: build a `Config` object, pass it to `run()`.
+- Dispatch is explicit: `run(config, import.meta)` resolves argv → command.
 
-- Commands are registered explicitly: `defineManifest({ name: handler })`
-- Configuration is explicit: you build a `Config` object and pass it to `run()`
-- Dispatch is explicit: `run(config)` resolves argv → command, using `config.manifest`
+Read CTI's code and you know what happens, with no searching for a decorator or a
+plugin that's silently changing behavior.
 
-You read CTI code and immediately understand what happens. No searching for decorators or annotation processors.
+### Minimalism by default
 
-#### Minimalism by Default
+CTI ships what CLI tools need and stops there. Fewer dependencies means faster
+startup; a smaller codebase means it's readable in an afternoon; fewer concepts
+means a shorter path from "installed" to "shipped." If you need something CTI
+doesn't provide, add it yourself; CTI won't bloat itself "just in case."
 
-CTI ships with only what CLI tools need. This is a deliberate choice:
+### Composition over configuration
 
-- Fewer dependencies = faster startup
-- Smaller codebase = easier to understand
-- Fewer concepts = shorter learning curve
-- Less magic = easier to debug
-
-If you need something CTI doesn't provide, you can add it. But CTI won't bloat itself "just in case."
-
-#### Composition Over Configuration
-
-CTI favours composable primitives over elaborate configuration. Instead of:
+Instead of a nested config format describing your command tree, you write
+plain modules and let the filesystem (or an inline map) describe the tree:
 
 ```typescript
-{
-  "commands": [
-    { "name": "auth", "subcommands": ["login", "logout"] }
-  ]
-}
+// commands/auth/login.ts, commands/auth/logout.ts: the directory *is* the config
 ```
 
-You write:
+Configuration is code. Code is honest; it can't drift from what actually runs.
 
-```typescript
-const config: Config = {
-  ...baseConfig,
-  manifest: defineManifest({
-    'auth/login': loginCommand,
-    'auth/logout': logoutCommand,
-  }),
-}
-void run(config)
-```
+### TypeScript first
 
-Configuration is code. Code is honest.
+Types are central, not optional. Command handlers, flags, context, config are
+all typed, so mistakes surface at `bun run check:types`, not on a user's
+machine. Types double as documentation: read a `CommandModule<F>` and you know
+exactly what a command needs and produces.
 
-#### TypeScript First
+### Performance isn't optional
 
-CTI assumes TypeScript. Types are not optional; they're central to how the framework works.
+Lazy command loading, a zero-dependency core, and Bun's native TypeScript
+support are not tuning knobs; they're the starting point. A CLI shouldn't
+notice CTI is there.
 
-- Command handlers are typed: `(ctx: Context) => Promise<void>`
-- Flags and arguments are typed: `flags?: Record<string, FlagSpec>`
-- The manifest and config are typed: `Manifest`, `Config`
+### Built for Bun, not portable everywhere
 
-This means you catch mistakes at development time, not production time. Types double as documentation.
-
-#### Performance Isn't Optional
-
-Every design decision considers performance:
-
-- Lazy loading of commands (only imported when invoked)
-- Zero-dependency core (uses only Bun and Node's stdlib)
-- Minimal allocations in hot paths
-- Startup time measured in single digits
-
-Performance isn't a feature you enable later. It's built in from the start.
-
-#### Embrace the Runtime
-
-CTI is built specifically for Bun. It doesn't try to work everywhere or run on Node.js. This lets us:
-
-- Use Bun's native TypeScript support (no transpilation)
-- Compile to standalone binaries (Bun's feature, not ours)
-- Use Bun's faster syscalls and I/O (meaningful for CLIs)
-- Simplify the codebase (no cross-runtime concerns)
-
-Bun is a constraint we embrace, not a limitation we work around.
-
-### How This Shapes CTI
-
-#### Argument Parsing
-
-CTI uses Node.js's built-in `parseArgs` utility, enhanced with type coercion. No external parser, no configuration nightmare. Flags are mapped to TypeScript types.
-
-#### I/O Primitives
-
-Instead of shipping a full-featured terminal UI library, CTI provides:
-
-- `colour(text, 'red')` — Direct ANSI colour output
-- `spinner(text)` — Basic loading indication
-- `prompt()`, `confirm()`, `select()` — User input primitives
-
-These are thin wrappers around Bun/Node functionality. You can extend them or replace them as needed.
-
-#### Command Structure
-
-A command is not a class or a decorator. It's a module that exports a `CommandModule`:
-
-```typescript
-export default {
-  meta: { description: 'Deploy application' },
-  flags: { environment: { type: 'string', default: 'staging' } },
-  run: async (ctx) => {
-    /* ... */
-  },
-} satisfies CommandModule
-```
-
-This is clear, typesafe, and immediately understandable.
-
-#### Configuration
-
-CTI doesn't enforce a configuration format. Load YAML, JSON, TypeScript modules—whatever suits you. Configuration is just data. Type it how you like.
+CTI doesn't try to run on Node.js. That's a constraint, embraced: native
+TypeScript with no transpile step, `bun build --compile` for standalone
+binaries, and a codebase with no cross-runtime shims to maintain.
 
 ---
 
-### Where CTI Differs
+### Where CTI differs
 
-#### vs. Yargs/Commander.js
+**vs. Yargs / Commander.js**: mature, widely used, and built for Node.js
+years before Bun existed; their API surface reflects that history. CTI is
+Bun-native, smaller, and assumes TypeScript from the start.
 
-Those libraries are mature and widely used, but they:
+**vs. Oclif**: feature-rich, production-tested, designed for large CLI suites
+with a plugin architecture and class-based commands. CTI is smaller and uses
+plain modules with a thin dispatcher instead.
 
-- Predate Bun by years (API design shows it)
-- Support Node.js (adds complexity)
-- Have larger surface area (more to learn)
+### What CTI isn't
 
-CTI is Bun-native, smaller, and assumes TypeScript.
+- **A web framework.** Use Hono, Elysia, or similar for servers.
+- **A general application framework.** It's for CLIs specifically.
+- **A task runner.** It's not Make, Rake, or npm scripts.
+- **A terminal UI framework.** It provides primitives (color, spinners, prompts), not a component system.
 
-#### vs. Oclif
+### Why choose it
 
-Oclif is feature-rich and production-tested. It's designed for large CLI suites. CTI is smaller, faster, and opinionated in different ways.
+Choose CTI if you're building a standalone CLI tool, want fast startup and
+small compiled binaries, and would rather write plain TypeScript modules than
+learn a configuration format. Don't reach for it if you're building a server,
+need to target Node.js specifically, or want a batteries-included framework
+with generated help, shell completions, and plugins today; those are on the
+[Roadmap](../future/roadmap.md), not shipped yet.
 
-Oclif uses classes and a plugin framework. CTI uses plain command modules and a small dispatcher.
-
-#### vs. Deno's Fresh (hypothetically)
-
-If Deno had a CLI framework, it would likely be similar to CTI—minimal, TypeScript-first, runtime-native. We got there first with Bun.
-
----
-
-### What CTI Isn't
-
-CTI is not:
-
-- **A web framework.** Use Hono, Elysia, or others for servers.
-- **A general-purpose application framework.** It's for CLIs specifically.
-- **A task runner.** It's not Makefile, Rake, or npm scripts.
-- **A package manager.** It doesn't manage dependencies.
-- **A terminal UI framework.** It provides primitives, not a full component system.
-
-CTI is a CLI framework. We do that one thing exceptionally well.
+CTI isn't trying to be everything. It's trying to be the obvious choice for
+one thing: fast, small, standalone CLI applications.

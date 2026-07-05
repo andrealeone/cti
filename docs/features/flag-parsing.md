@@ -1,107 +1,101 @@
 # Flag Parsing
 
-CTI provides typed, zero-overhead flag parsing built on Node's `util.parseArgs`. Every flag is declared with its type, default, and validation rules, and the parser ensures values match their specification.
-
-## Flag Types
-
-CTI supports three flag types: `string`, `boolean`, and `number`.
+Flags are declared as plain objects on a command's `flags` map, with no builder
+functions to import. CTI parses them with Node's `util.parseArgs` and coerces
+each value to its declared type.
 
 ```typescript
-import { createCLI } from 'cti'
+import { command } from 'cti'
 
 export default command({
   flags: {
-    verbose: flags.boolean({ short: 'v' }),
-    count: flags.number({ default: 1 }),
-    output: flags.string({ short: 'o' }),
+    verbose: { type: 'boolean', short: 'v' },
+    count: { type: 'number', default: 1 },
+    output: { type: 'string', short: 'o' },
   },
-  run({ flags }) {
-    console.log(flags.verbose, flags.count, flags.output)
+  run(ctx) {
+    ctx.io.write(`${ctx.flags.verbose} ${ctx.flags.count} ${ctx.flags.output}`)
   },
 })
 ```
 
-## Short Aliases
+## Flag types
 
-Flags can have single-character short forms, passed with `-` instead of `--`:
+Three types are supported: `string`, `boolean`, `number`. See
+[Type Coercion](type-coercion.md) for exactly how each is converted.
 
-```bash
-app --verbose          # same as:
-app -v                 # short form
-
-app --output file.txt  # same as:
-app -o file.txt
-```
-
-## Flag Defaults
-
-Provide a default value that matches the flag's declared type:
-
-```typescript
-flags: {
-  steps: flags.number({ default: 1 }),      // valid
-  format: flags.string({ default: 'json' }), // valid
-  // format: flags.string({ default: 1 }) // ERROR: type mismatch
-}
-```
-
-## Multiple Values
-
-Flags can accept multiple values using the `multiple` option:
-
-```typescript
-flags: {
-  tags: flags.string({ multiple: true })
-}
-```
-
-Used as:
+## Short aliases
 
 ```bash
-app --tags foo --tags bar  # flags.tags = ['foo', 'bar']
+app --verbose   # same as
+app -v
 ```
 
-## Required Flags
+```typescript
+verbose: { type: 'boolean', short: 'v' }
+```
 
-Mark a flag as required when it must always be provided:
+## Defaults
 
 ```typescript
 flags: {
-  apiKey: flags.string({ required: true })
+  steps: { type: 'number', default: 1 },
+  format: { type: 'string', default: 'json' },
 }
 ```
 
-## Choices Constraint
+A default is used as-is (never coerced) when the flag is omitted.
 
-Restrict a flag to specific values:
+## Multiple values
 
 ```typescript
-flags: {
-  format: flags.string({
-    choices: ['json', 'csv', 'xml'] as const,
-  })
-}
+tags: { type: 'string', multiple: true }
 ```
 
-## Validation
+```bash
+app --tags foo --tags bar  # ctx.flags.tags = ['foo', 'bar']
+```
 
-Custom validation functions reject invalid values:
+## `required`, `choices`, `validate`
+
+`FlagSpec` also declares these three:
 
 ```typescript
-flags: {
-  port: flags.number({
-    validate: (value) => {
-      const num = value as number
-      return num > 0 && num < 65536 ? true : 'Port must be 1-65535'
-    },
-  })
+interface FlagSpec {
+  type: 'string' | 'boolean' | 'number'
+  short?: string
+  description?: string
+  default?: string | boolean | number
+  required?: boolean
+  multiple?: boolean
+  choices?: readonly string[]
+  validate?: (value: unknown) => true | string
 }
 ```
 
-## Flag Parsing Flow
+**They are not enforced by the parser yet.** Declaring `required: true` or
+`choices: ['json', 'csv']` documents intent and types `ctx.flags` correctly,
+but a missing required flag or an out-of-choices value currently passes
+through unchecked. Enforcing them during parsing is a tracked
+[Roadmap](../future/roadmap.md) item. Until then, check inside your handler:
 
-1. Arguments are tokenized using Node's `parseArgs`
-2. Each token is coerced to its declared type
-3. Validation rules are applied
-4. Defaults fill in missing values
-5. The typed flags object is attached to the context
+```typescript
+run(ctx) {
+  const format = ctx.flags.format as string
+  if (!['json', 'csv', 'xml'].includes(format)) {
+    ctx.io.writeError(`Invalid format: ${format}`)
+    return 1
+  }
+}
+```
+
+## How parsing works
+
+1. Each `FlagSpec` is converted to a Node `parseArgs` option (`type`, `short`,
+   `multiple`; a numeric `default` is stringified for `parseArgs` and coerced
+   back afterward)
+2. `parseArgs` tokenizes `argv` against those options
+3. Each parsed value is coerced to its declared type
+4. Values with no match fall back to the flag's `default`, if any
+
+See [Core Module](../architecture/core.md) for the implementation.

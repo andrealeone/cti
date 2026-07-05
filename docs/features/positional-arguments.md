@@ -1,97 +1,80 @@
 # Positional Arguments
 
-Positional arguments are values passed after flags, in order. CTI provides strong typing and validation for positional arguments.
+Positional arguments are the non-flag tokens left over after routing and flag
+parsing, in the order they were given. CTI exposes them as `ctx.positionals: string[]`,
+with no per-argument typing or coercion; they're always strings.
 
-## Declaring Arguments
-
-Arguments are declared in the `args` array of a command module:
+## Accessing them
 
 ```typescript
-import { command, args } from 'cti'
-
 export default command({
-  args: [
-    args.string({ name: 'source', required: true, describe: 'Source file' }),
-    args.string({ name: 'dest', required: false, describe: 'Destination file' }),
-  ],
-  run({ positionals }) {
-    console.log(`Copying ${positionals[0]} to ${positionals[1]}`)
+  run(ctx) {
+    const source = ctx.positionals[0]
+    const dest = ctx.positionals[1]
+
+    if (!source || !dest) {
+      ctx.io.writeError('Usage: copy <source> <dest>')
+      return 1
+    }
+
+    ctx.io.write(`Copying ${source} to ${dest}`)
   },
 })
 ```
 
-## Required vs Optional
+## Where they come from
 
-Mark an argument as required if it must be provided:
-
-```typescript
-args: [
-  args.string({ name: 'file', required: true }), // must be provided
-  args.string({ name: 'backup', required: false }), // optional
-]
-```
-
-## Types
-
-Positional arguments support `string` and `number` types:
-
-```typescript
-args: [args.string({ name: 'username' }), args.number({ name: 'port' })]
-```
-
-## Variadic Arguments
-
-The `variadic` option collects remaining arguments into an array:
-
-```typescript
-args: [
-  args.string({ name: 'command' }),
-  args.rest({ name: 'args', describe: 'Additional arguments' }),
-]
-```
-
-Used as:
+Positionals are whatever's left after the router consumes the route and the
+parser consumes recognized flags:
 
 ```bash
-app exec node --version extra args
-# positionals = ['node', '--version', 'extra', 'args']
+my-cli deploy src/ dist/ --force
 ```
 
-## Validation
-
-Custom validation functions ensure argument values are valid:
-
 ```typescript
-args: [
-  args.string({
-    name: 'file',
-    validate: (value) => {
-      return value.endsWith('.ts') ? true : 'File must be a TypeScript file'
-    },
-  }),
-]
+ctx.flags = { force: true }
+ctx.positionals = ['src/', 'dist/']
 ```
 
-## Accessing Arguments
+Route segments never appear in `positionals`; `resolveRoute` strips them
+before the parser sees anything. See [Command Routing](command-routing.md).
 
-Arguments are available in `ctx.positionals` as an array:
+## `args` metadata
+
+`CommandModule` has an optional `args: ArgSpec[]` field for documenting a
+command's expected positionals:
 
 ```typescript
-run({ positionals }) {
-  const source = positionals[0]
-  const dest = positionals[1]
-  // ...
+interface ArgSpec {
+  name: string
+  description?: string
+  required?: boolean
+  variadic?: boolean
+  validate?: (value: string) => true | string
 }
 ```
 
-## Parsing Order
+This is currently **descriptive only**; the runtime doesn't read `args` at
+all today. Declaring `args: [{ name: 'file', required: true }]` documents
+intent (and will back generated `--help` text and validation once that lands,
+per the [Roadmap](../future/roadmap.md)), but CTI won't reject a missing or
+malformed positional for you. Validate and report errors yourself, as in the
+example above.
 
-Positional arguments are parsed after flags:
+## Everything is a string
 
-```bash
-app --verbose file.txt --output result.json
-# Flags: verbose=true, output='result.json'
-# Positionals: ['file.txt']
+Because there's no coercion step for positionals, `ctx.positionals[1]` is
+always `string`, never `number`; convert it yourself:
+
+```typescript
+run(ctx) {
+  const port = Number(ctx.positionals[0])
+  if (Number.isNaN(port)) {
+    ctx.io.writeError('Port must be a number')
+    return 1
+  }
+}
 ```
 
-Arguments must come after all flags (unless using `--` to separate them).
+If a value should be typed and validated by the framework, prefer a **flag**
+over a positional. See [Flag Parsing](flag-parsing.md).

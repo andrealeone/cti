@@ -1,416 +1,111 @@
-## Contributing Guide
+## Contributing
 
-CTI is still in early development. Contributions are welcome and needed. This guide covers how to contribute.
+CTI is early: pre-1.0, still Phase 0 on the [Roadmap](../future/roadmap.md).
+That means two things: contributions are genuinely welcome, and nothing about
+the API is set in stone yet, so feedback on rough edges lands while it can
+still shape the design.
 
-### Getting Started
-
-#### 1. Clone the Repository
+### Setup
 
 ```bash
 git clone https://github.com/andrealeone/cti.git
 cd cti
-```
-
-#### 2. Install Dependencies
-
-```bash
 bun install
 ```
 
-#### 3. Run Tests
+```bash
+bun test              # run the suite
+bun test --watch      # watch mode
+bun run check:types   # tsc --noEmit over src, demos, and tests
+bun run lint          # oxlint
+bun run format        # oxfmt
+```
+
+### Making a change
+
+1. Branch from `main`: `git checkout -b feature/your-feature`
+2. Write the change and its test alongside it (see [Testing](testing.md))
+3. `bun run check:types && bun run lint && bun test`
+4. Commit with a conventional prefix: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `chore:`
+5. Open a pull request
+
+### Code style
+
+- `const` by default, `let` when reassigned, never `var`
+- Avoid `any`; use `unknown` when a type is genuinely unknown
+- Files: kebab-case. Functions/variables: camelCase. Types/interfaces: PascalCase.
+- Formatting and linting are enforced by `oxfmt`/`oxlint`, not by hand: run
+  `bun run format` and `bun run lint:fix` rather than reformatting manually
+
+### Where help is most useful right now
+
+- **Testing**: new platforms, terminal emulators, edge cases
+- **Documentation**: clarity, accuracy against the current source, missing examples
+- **The Phase 1 items** on the [Roadmap](../future/roadmap.md): flag validation
+  enforcement, `--help`/`--version` generation, shell completions
+- **Examples**: a real CLI you built with CTI, shared as an issue or a demo
+
+If you're picking your first contribution, low-stakes options are a docs fix,
+a new [demo](../guides/demos.md), or a bug report from actually using CTI.
+
+### Testing your changes in another project
 
 ```bash
-bun test
-bun test --watch
+bun link              # inside the cti repo
+cd /path/to/your/project
+bun link cti          # use the local build instead of a published version
 ```
 
-#### 4. Check Types
+Unlink with `bun unlink cti` and `bun install` to restore the published
+version when you're done.
 
-```bash
-bun run check:types
-```
+### Reporting a bug
 
-#### 5. Format and Lint
-
-```bash
-bun run format
-bun run lint:fix
-```
-
-### Development Workflow
-
-#### Making Changes
-
-1. **Create a branch** from main:
-
-   ```bash
-   git checkout -b feature/your-feature
-   ```
-
-2. **Write your code** in TypeScript
-
-3. **Test your changes**:
-
-   ```bash
-   bun test --watch
-   ```
-
-4. **Check types and linting**:
-
-   ```bash
-   bun run check:types
-   bun run lint
-   ```
-
-5. **Commit with a clear message**:
-
-   ```bash
-   git commit -m "feat: add new feature"
-   ```
-
-6. **Push and open a pull request**:
-   ```bash
-   git push origin feature/your-feature
-   ```
-
-#### Commit Messages
-
-Follow conventional commits:
-
-- `feat:` — New feature
-- `fix:` — Bug fix
-- `docs:` — Documentation
-- `test:` — Test additions or fixes
-- `refactor:` — Code refactoring (no behaviour change)
-- `perf:` — Performance improvement
-- `chore:` — Maintenance
-
-Example:
-
-```bash
-git commit -m "feat: add command validation"
-git commit -m "fix: correct TTY detection on Windows"
-git commit -m "docs: update API reference"
-```
-
-### Code Style
-
-#### TypeScript
-
-- Use `const` by default, `let` when needed, never `var`
-- Prefer explicit types over inference for public APIs
-- Use `satisfies` keyword for type narrowing
-- Avoid `any`; use `unknown` if the type is truly unknown
-
-#### Naming
-
-- Files: kebab-case (`my-file.ts`)
-- Functions and variables: camelCase (`myFunction`)
-- Types and interfaces: PascalCase (`MyInterface`)
-- Constants: UPPER_SNAKE_CASE (`MAX_SIZE`)
-
-#### Formatting
-
-All code must pass:
-
-```bash
-bun run format
-```
-
-This uses oxfmt. Don't manually format; let the tool handle it.
-
-#### Linting
-
-All code must pass:
-
-```bash
-bun run lint
-```
-
-This uses oxlint. Fix warnings before submitting:
-
-```bash
-bun run lint:fix
-```
-
-### Testing
-
-#### Writing Tests
-
-Tests go in `tests/` with a `.test.ts` extension, mirroring `src/`:
-
-```typescript
-// tests/unit/my-feature.test.ts
-import { describe, test, expect } from 'bun:test'
-import { myFunction } from '../../src/my-function'
-
-describe('myFunction', () => {
-  test('does something', () => {
-    const result = myFunction()
-    expect(result).toBe(expected)
-  })
-
-  test('handles edge cases', () => {
-    expect(() => myFunction(null)).toThrow()
-  })
-})
-```
-
-#### Running Tests
-
-```bash
-bun test              # Run all tests
-bun test --watch     # Run in watch mode
-bun test my-file     # Run specific test file
-```
-
-#### Test Coverage
-
-We aim for >80% coverage. Check coverage:
-
-```bash
-bun test --coverage
-```
-
-### Documentation
-
-#### Updating Docs
-
-Documentation is in `docs/`. When you change the codebase:
-
-1. **Update relevant architecture docs** if internals change
-2. **Update API reference** if public APIs change
-3. **Update examples** if usage patterns change
-
-#### Writing Docs
-
-- Use clear, concise language
-- Use British English (colour, not color)
-- Provide code examples
-- Explain the "why" not just the "what"
-- Link to related docs with `[title](path)`
-
-Example:
-
-````markdown
-## My Topic
-
-This explains something important.
-
-### Usage
-
-```typescript
-const x = doSomething()
-```
-````
-
-This is useful because...
-
-### Why Not Alternative?
-
-We chose this approach because...
-
-````
-
-### Architecture Guidelines
-
-#### Principles
-
-CTI values:
-
-1. **Minimalism** — Include only what's needed
-2. **Explicitness** — No magic, no hidden conventions
-3. **Composability** — Pieces work together cleanly
-4. **Type safety** — Strong types throughout
-5. **Performance** — Startup and runtime speed matter
-
-#### When Adding Features
-
-Ask yourself:
-
-- Is this essential for CLI tools? (If no, probably don't add it)
-- Can this live outside the core? (Prefer separate modules to core features)
-- Does this increase complexity significantly? (Avoid if possible)
-- Is there an existing pattern I should follow?
-
-#### Code Review Checklist
-
-Before submitting a PR, ensure:
-
-- [ ] Code follows the style guide
-- [ ] Tests are included and pass
-- [ ] Types check: `bun run check:types`
-- [ ] Linting passes: `bun run lint`
-- [ ] Documentation is updated (if needed)
-- [ ] Commit messages are clear
-- [ ] No breaking changes (unless major version)
-
-### Reporting Issues
-
-#### Bug Reports
-
-Include:
-
-1. **What you expected** to happen
-2. **What actually happened**
-3. **Steps to reproduce**
-4. **Your environment** (Bun version, OS, etc.)
-
-Example:
+Include what you expected, what actually happened, the exact steps to
+reproduce, and your environment (`bun --version`, OS):
 
 ```markdown
-## Bug: Colours not working in Windows
+## Bug: colors not applied on Windows Terminal
 
 ### Expected
-Colours should display in Windows Terminal.
+`ctx.io.color(...)` output should be colored in an interactive terminal.
 
 ### Actual
-All output is plain text, no colours.
+Output is plain text, no ANSI codes.
 
 ### Steps
 1. Run `my-cli deploy` in Windows Terminal
-2. No colours appear
+2. Output has no color
 
 ### Environment
-- Bun 1.3.14
-- Windows 11
-- Windows Terminal
-````
-
-#### Feature Requests
-
-Include:
-
-1. **What you want** to do
-2. **Why you want** it
-3. **How it might** work
-
-Example:
-
-````markdown
-## Feature: Command history
-
-### Use Case
-
-I want to see previously run commands.
-
-### Proposal
-
-Add a `history` command that shows recent invocations:
-
-```bash
-$ my-cli history
-```
-````
-
-### Why
-
-This would help users remember what they did.
-
-````
-
-### Testing Locally with `bun link`
-
-To test your local changes in another project before submitting a PR, use `bun link`:
-
-1. **Link the package** in the CTI repository:
-
-```bash
-bun link
+Bun 1.3.14, Windows 11, Windows Terminal
 ```
 
-2. **Use the linked package** in your test project:
+### Proposing a feature
 
-```bash
-cd /path/to/your/project
-
-bun link cti
-```
-
-3. **Verify your changes** by running your CLI commands in the test project.
-
-4. **Unlink when done** (optional):
-
-```bash
-bun unlink cti
-bun install     # Reinstall the original version
-```
-
-This ensures your changes work as expected in a real codebase.
-
-### Getting Help
-
-- **Questions?** Open a discussion or issue
-- **Not sure?** Ask before starting big changes
-- **Stuck?** Reach out; we're happy to help
-
-### Code of Conduct
-
-CTI is inclusive. We welcome:
-
-- People of all backgrounds
-- Beginners and experts
-- Different perspectives
-- Constructive feedback
-
-We don't tolerate:
-
-- Discrimination
-- Harassment
-- Bad-faith arguments
-- Disrespect
-
-### Reviewing PRs
-
-If you're reviewing a PR:
-
-1. **Check the code** — Does it work? Is it clear?
-2. **Check the tests** — Do they cover the change?
-3. **Check the docs** — Is it documented?
-4. **Be kind** — Offer constructive feedback, not criticism
-
-Example feedback:
+State the use case before the solution: what are you trying to do, and why
+doesn't the current API let you do it cleanly?
 
 ```markdown
-[Good] Great addition! One suggestion:
+## Feature: shell completions
 
-The error handling could be clearer. Instead of:
-```typescript
-if (!value) throw new Error('...')
-````
+### Use case
+Tab-completing subcommands and flags in bash/zsh.
 
-Consider:
-
-```typescript
-if (!value) {
-  ctx.io.writeError('...')
-  return 1
-}
+### Proposal
+Generate completion scripts from the manifest, exposed as `--completions bash`.
 ```
 
-This gives users a clearer error message. What do you think?
-
-```
+This is already tracked on the [Roadmap](../future/roadmap.md), so check there
+first so proposals build on what's planned rather than duplicating it.
 
 ### Releasing
 
-Releases are handled by maintainers. The process:
+Releases are handled by maintainers using the `version:*` scripts in
+`package.json` (`version:major`, `version:minor`, `version:patch`, `version:rc`).
+Contributors don't need to think about this.
 
-1. Update `package.json` version
-2. Update `CHANGELOG.md`
-3. Commit and tag: `git tag v1.0.0`
-4. Push: `git push origin main --tags`
-5. Publish to npm: `npm publish`
+### Questions
 
-Contributors don't need to do this; maintainers handle releases.
-
----
-
-### Questions?
-
-- Open an issue
-- Join discussions
-- Reach out directly
-
-Thank you for contributing to CTI!
-```
+Open a discussion or issue on GitHub. Asking before starting a large change is
+welcome, since it's cheaper than reworking it after the fact.

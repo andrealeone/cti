@@ -6,10 +6,10 @@ A user profile manager CLI that showcases CTI's interactive and logging features
 
 ### 1. **Logging** (`ctx.logger`)
 
-- `ctx.logger.info()` — General information about operations
-- `ctx.logger.warn()` — Warnings when operations don't complete as expected
-- `ctx.logger.debug()` — Debug details when DEBUG env var is set
-- `ctx.logger.error()` — Error messages for failed operations
+- `ctx.logger.info()`: General information about operations
+- `ctx.logger.warn()`: Warnings when operations don't complete as expected
+- `ctx.logger.debug()`: Debug details when DEBUG env var is set
+- `ctx.logger.error()`: Error messages for failed operations
 
 ### 2. **Interactive Prompts** (`ctx.io.prompt()`)
 
@@ -31,7 +31,7 @@ A user profile manager CLI that showcases CTI's interactive and logging features
 - Show progress during long-running operations
 - Used during profile imports
 
-### 6. **Colors** (`ctx.io.colour()`)
+### 6. **Colors** (`ctx.io.color()`)
 
 - Format output with colors
 - Role badges display in different colors (red=admin, green=user, yellow=viewer)
@@ -95,8 +95,8 @@ bun test tests/demos.test.ts
 
 ## Key Patterns
 
-1. **Discovery-based manifest** — Commands are automatically loaded from `commands/*.ts` files
-2. **Async/await** — All commands use async operations (file I/O, stdin, prompts)
-3. **Proper error handling** — Validates input and returns exit codes (0 = success, 1 = failure)
-4. **Logger-first design** — Important events are logged for debugging and audit trails
-5. **Graceful fallbacks** — Interactive prompts/confirms work with stubbed defaults in non-TTY environments
+1. **Discovery-based manifest**: Commands are automatically loaded from `commands/*.ts` files
+2. **Async/await**: All commands use async operations (file I/O, stdin, prompts)
+3. **Proper error handling**: Validates input and returns exit codes (0 = success, 1 = failure)
+4. **Logger-first design**: Important events are logged for debugging and audit trails
+5. **Graceful fallbacks**: Interactive prompts/confirms work with stubbed defaults in non-TTY environments

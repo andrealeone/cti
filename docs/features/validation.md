@@ -1,189 +1,99 @@
 # Validation
 
-CTI provides validation for flags and positional arguments. Custom validation functions ensure that parsed values meet your requirements before the handler runs.
+`FlagSpec.choices` and `FlagSpec.validate` (and `ArgSpec.validate`) exist as
+types today, but **the parser doesn't call them yet**. See the
+[Roadmap](../future/roadmap.md) for enforcement landing in a future release.
+Until then, validate inside your handler, where you also control the error
+message and exit code.
 
-## Flag Validation
-
-Add a `validate` function to any flag:
-
-```typescript
-flags: {
-  port: flags.number({
-    validate: (value) => {
-      const num = value as number
-      return num > 0 && num < 65536 ? true : 'Port must be 1-65535'
-    },
-  })
-}
-```
-
-If validation fails, CTI prints the error message and exits with a usage error.
-
-## Argument Validation
-
-Positional arguments support validation too:
+## The pattern
 
 ```typescript
-args: [
-  args.string({
-    name: 'file',
-    validate: (value) => {
-      return value.endsWith('.ts') ? true : 'Must be a TypeScript file'
-    },
-  }),
-]
+export default command({
+  flags: {
+    port: { type: 'number' },
+  },
+  run(ctx) {
+    const port = ctx.flags.port as number
+
+    if (!(port > 0 && port < 65536)) {
+      ctx.io.writeError('Port must be between 1 and 65535')
+      return 1
+    }
+
+    // proceed with a valid port
+  },
+})
 ```
 
-## Return Value
+Returning a non-zero number from `run` is how you signal a usage error. See
+[Command Modules](command-modules.md#exit-codes).
 
-Validation functions return:
+## Common checks
 
-- `true` if the value is valid
-- A string error message if invalid
-
-```typescript
-validate: (value) => {
-  if (isValid(value)) return true
-  return 'Error message'
-}
-```
-
-## Timing
-
-Validation runs after type coercion:
-
-1. Parse the argument
-2. Coerce to the target type
-3. Run validation
-4. Attach to context
-
-For a number flag, validation receives the number, not the string.
-
-## Choices Constraint
-
-Built-in validation for restricted values:
-
-```typescript
-flags: {
-  format: flags.string({
-    choices: ['json', 'csv', 'xml'] as const,
-  })
-}
-```
-
-## Common Patterns
-
-### File Existence
+**File existence**
 
 ```typescript
 import { existsSync } from 'node:fs'
 
-args: [
-  args.string({
-    name: 'file',
-    validate: (value) => {
-      return existsSync(value) ? true : 'File not found'
-    },
-  }),
-]
-```
-
-### Port Range
-
-```typescript
-flags: {
-  port: flags.number({
-    validate: (value) => {
-      const n = value as number
-      return n >= 1 && n <= 65535 ? true : 'Port out of range'
-    },
-  })
-}
-```
-
-### URL Format
-
-```typescript
-flags: {
-  url: flags.string({
-    validate: (value) => {
-      try {
-        new URL(value as string)
-        return true
-      } catch {
-        return 'Invalid URL'
-      }
-    },
-  })
-}
-```
-
-### Email Address
-
-```typescript
-flags: {
-  email: flags.string({
-    validate: (value) => {
-      const v = value as string
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? true : 'Invalid email'
-    },
-  })
-}
-```
-
-## Error Handling
-
-When validation fails, CTI:
-
-1. Prints the error message
-2. Exits with code 2 (usage error)
-3. Does not run the command handler
-
-This ensures only valid commands proceed.
-
-## Async Validation
-
-Validation functions are synchronous. For async validation (e.g., checking a database), validate in the handler:
-
-```typescript
-run({ flags, io }) {
-  const isValid = await checkDatabase(flags.id)
-  if (!isValid) {
-    io.writeError('Invalid ID')
+run(ctx) {
+  const file = ctx.positionals[0]
+  if (!file || !existsSync(file)) {
+    ctx.io.writeError('File not found')
     return 1
   }
-  // Proceed with valid data
 }
 ```
 
-## Multiple Constraints
-
-Combine multiple checks:
+**Choice constraint** (until `choices` is enforced by the parser)
 
 ```typescript
-validate: (value) => {
-  const v = value as string
-
-  if (v.length < 3) return 'Minimum 3 characters'
-  if (v.length > 100) return 'Maximum 100 characters'
-  if (!/^[a-z0-9-]+$/i.test(v)) return 'Only alphanumeric and hyphens'
-
-  return true
+run(ctx) {
+  const format = ctx.flags.format as string
+  if (!['json', 'csv', 'xml'].includes(format)) {
+    ctx.io.writeError(`Invalid format: ${format}. Expected json, csv, or xml.`)
+    return 1
+  }
 }
 ```
 
-## User Feedback
-
-Write clear, specific error messages. Avoid technical jargon:
+**URL format**
 
 ```typescript
-// Good: Clear and actionable
-validate: (value) => {
-  return value.length >= 1 ? true : 'Must not be empty'
+run(ctx) {
+  try {
+    new URL(ctx.flags.url as string)
+  } catch {
+    ctx.io.writeError('Invalid URL')
+    return 1
+  }
 }
+```
+
+## Async validation
+
+Since validation lives in your handler rather than a framework hook, it can be
+async without restriction: check a database, call an API, whatever the check
+needs:
+
+```typescript
+run: async (ctx) => {
+  const exists = await checkDatabase(ctx.flags.id)
+  if (!exists) {
+    ctx.io.writeError('Unknown ID')
+    return 1
+  }
+}
+```
+
+## Writing good error messages
+
+Be specific about what was wrong and what's expected:
+
+```typescript
+// Clear and actionable
+if (value.length < 1) return ctx.io.writeError('Name must not be empty'), 1
 
 // Less helpful
-validate: (value) => {
-  return value.length >= 1 ? true : 'Invalid input'
-}
+if (value.length < 1) return ctx.io.writeError('Invalid input'), 1
 ```
