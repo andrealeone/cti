@@ -34,9 +34,9 @@ There are no configuration files to maintain and no wiring code to write. The fr
 ### Features
 
 - **No Boilerplate** No manual imports or routing logic, just files in a `commands` directory.
-- **Typed Arguments** Flags and positionals are declared once and arrive in your handler already parsed, coerced, and typed.
-- **Zero-Config** concise-ti discovers commands from the filesystem; nothing to wire up by hand.
-- **Lightweight** No runtime dependencies; the framework is the only thing in your `node_modules` that's concise-ti.
+- **Typed Arguments** Flags and positionals are declared once and arrive in the handler function already parsed, coerced, and typed.
+- **Zero-Config** Auto-discover commands from the filesystem, leaving you nothing to wire up by hand.
+- **Lightweight** No runtime dependencies: the framework is the only thing in your `node_modules`.
 - **Bun-Optimized** Lean on Bun's speed and native TypeScript.
 - **Compiles to Binary** Ship your CLI as a single standalone executable with `bun build --compile`.
 
