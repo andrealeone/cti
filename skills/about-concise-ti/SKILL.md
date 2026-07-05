@@ -34,7 +34,7 @@ concise-ti is probably the wrong choice if you:
 
 ## How it compares
 
-|               | concise-ti                                                         | Yargs / Commander.js  | Oclif                         |
+|               | concise-ti                                                  | Yargs / Commander.js  | Oclif                         |
 | ------------- | ----------------------------------------------------------- | --------------------- | ----------------------------- |
 | Runtime       | Bun only                                                    | Node.js               | Node.js                       |
 | Startup       | ~1–10ms                                                     | ~300–500ms            | ~300–500ms                    |

@@ -23,7 +23,7 @@ Migrations fail when they're done file-by-file with no map. Before writing anyth
 - **Positionals**: name, required?, variadic (rest-style, e.g. `cp <src...> <dest>`)?
 - **Side effects**: network calls, filesystem writes, prompts, spawned processes, anything the handler does beyond parsing.
 - **Output**: what it prints on success, on failure, and what exit code each path uses.
-- **Shared state**: helpers, config loading, or module-level variables multiple commands depend on (these become plain `.ts` modules that live *next to*, not *inside*, the commands directory).
+- **Shared state**: helpers, config loading, or module-level variables multiple commands depend on (these become plain `.ts` modules that live _next to_, not _inside_, the commands directory).
 
 This inventory becomes both your route map and your test plan; every row is one migrated command and (at minimum) one test.
 
@@ -32,15 +32,14 @@ This inventory becomes both your route map and your test plan; every row is one 
 A concise-ti CLI has exactly three moving parts, and everything from the old CLI needs to land in one of them:
 
 1. **Command modules**: plain objects (`CommandModule`) with `meta`, `flags`, `args`, and a `run(ctx)` handler. This is where each old subcommand's handler logic goes, largely unchanged; only the argument-reading and output-writing code at its edges changes.
-2. **A manifest**: maps route strings to command modules, built either inline (`defineManifest`) for a handful of commands or by directory scan (`discoverManifest`) for many. Old CLIs with a big subcommand tree (Commander's `.command()` chains, Oclif's `commands/` directory, argparse subparsers) map naturally onto the directory-scanned shape, since the on-disk layout mirrors the old subcommand tree almost 1:1.
+2. **A manifest**: maps route strings to command modules. Default to building it by directory scan (`discoverManifest`, via `commandsDir`) rather than inline (`defineManifest`); the on-disk layout mirrors the old subcommand tree almost 1:1, and it scales from one command to a deep tree without ever touching the entrypoint again.
 3. **The runtime**: `run(config, importMeta?)` replaces whatever dispatch loop, argv parser, and top-level try/catch the old CLI had. You delete that code; you don't port it.
 
 Everything reading `process.argv` manually, hand-rolled `switch` statements over `argv[2]`, or a bespoke help-text generator gets deleted, not translated line-by-line. concise-ti's router and parser replace all of it.
 
 ## Picking inline vs. directory-scanned for the port
 
-- **Old CLI has ≤ ~5 flat commands** (a small Commander/Yargs script, a handful of npm-script-style subcommands): port to the inline shape, one file, `defineManifest({ ...commands })`.
-- **Old CLI has a nested command tree** (Oclif's `commands/` directory, Commander's grouped subcommands, argparse subparsers-of-subparsers, a `git`-style `noun verb` CLI): port to the directory-scanned shape, and let the new directory structure mirror the old command tree:
+Default to the directory-scanned shape, regardless of how small the old CLI is: a one-line `main.ts` (`run({ name, commandsDir: 'commands', version }, import.meta)`) plus command auto-discovery. It requires no more setup than the inline shape for a single command, and it means the entrypoint never has to change again as commands are added — so use it even for a small Commander/Yargs script or a handful of npm-script-style subcommands, not just for nested trees (Oclif's `commands/` directory, argparse subparsers-of-subparsers, a `git`-style `noun verb` CLI). Let the new directory structure mirror the old command tree:
 
 ```
 my-cli/
@@ -67,13 +66,17 @@ import { run } from 'concise-ti'
 void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.meta)
 ```
 
-or, for the inline shape:
+Only reach for the inline shape (`defineManifest`) if there's a concrete reason to avoid a `commands/` directory (e.g. a single-file distributable with no other files); otherwise stick with the auto-discovery entrypoint above:
 
 ```typescript
 import { command, defineManifest, run } from 'concise-ti'
 
-const deploy = command({ /* ... */ })
-const rollback = command({ /* ... */ })
+const deploy = command({
+  /* ... */
+})
+const rollback = command({
+  /* ... */
+})
 
 void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ deploy, rollback }) })
 ```
@@ -111,29 +114,30 @@ export default command<DeployFlags>({
 
 Map old constructs onto concise-ti's contract:
 
-| Old CLI concept                                    | concise-ti equivalent                                                                 |
-| --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `.option('--env <env>', 'desc', 'staging')`          | `flags: { env: { type: 'string', default: 'staging', description: 'desc' } }`   |
-| `.option('-f, --force')` (boolean flag)              | `flags: { force: { type: 'boolean', short: 'f' } }`                             |
-| Flag repeated / array-valued (`--tag a --tag b`)     | `flags: { tag: { type: 'string', multiple: true } }`                            |
-| `.choices(['dev', 'staging', 'prod'])`               | `flags: { env: { type: 'string', choices: ['dev', 'staging', 'prod'] as const } }` |
-| Custom flag validation function                     | `flags: { env: { validate: (v) => isValid(v) || 'must be dev/staging/prod' } }` |
-| `.argument('<source>')` / `.argument('[dest]')`      | Declare in `args` for documentation; read via `ctx.positionals[0]`. concise-ti doesn't enforce arity for you, so validate at the top of `run()` |
-| Variadic positional (`<files...>`)                   | `args: [{ name: 'files', variadic: true }]`, read the tail of `ctx.positionals` yourself |
-| `process.exit(1)` on failure                         | `return 1` from `run()`. The runtime sets `process.exitCode`; never call `process.exit()` yourself |
-| Top-level `try/catch` around the whole CLI           | Delete it. The runtime already catches thrown errors, formats them as `Error: <message>`, and exits 1. Keep your own `try/catch` only where you want a *better* message than the generic one |
-| `chalk`/`kleur`/ANSI-escape output                   | `ctx.io.color(text, colorName)`, American spelling; `Color` is `'red' \| 'green' \| 'yellow' \| 'blue' \| 'magenta' \| 'cyan' \| 'gray'` |
-| `console.log` / `process.stdout.write`               | `ctx.io.write(text)`                                                            |
-| `console.error` / `process.stderr.write`             | `ctx.io.writeError(text)`                                                        |
-| `inquirer`/`prompts`/readline-based prompt            | `await ctx.io.prompt(question)`, `await ctx.io.confirm(question, fallback)`, `await ctx.io.select(question, choices)` |
-| `ora` or hand-rolled spinner                         | `ctx.io.spinner(text)` → `.succeed(msg)` / `.fail(msg)`                          |
-| debug logging behind a `--verbose`/`DEBUG` env check | `ctx.logger.debug(...)`, already gated on the `DEBUG` env var; `logger.info/warn/error` always print |
-| Global config object / env lookup                    | `ctx.config` (whatever you built in `main.ts`) and `ctx.env` (a snapshot of `process.env`) |
-| `process.cwd()` scattered through handlers            | `ctx.cwd`                                                                        |
+| Old CLI concept                                      | concise-ti equivalent                                                                                                                                                                        |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------- |
+| `.option('--env <env>', 'desc', 'staging')`          | `flags: { env: { type: 'string', default: 'staging', description: 'desc' } }`                                                                                                                |
+| `.option('-f, --force')` (boolean flag)              | `flags: { force: { type: 'boolean', short: 'f' } }`                                                                                                                                          |
+| Flag repeated / array-valued (`--tag a --tag b`)     | `flags: { tag: { type: 'string', multiple: true } }`                                                                                                                                         |
+| `.choices(['dev', 'staging', 'prod'])`               | `flags: { env: { type: 'string', choices: ['dev', 'staging', 'prod'] as const } }`                                                                                                           |
+| Custom flag validation function                      | `flags: { env: { validate: (v) => isValid(v)                                                                                                                                                 |     | 'must be dev/staging/prod' } }` |
+| `.argument('<source>')` / `.argument('[dest]')`      | Declare in `args` for documentation; read via `ctx.positionals[0]`. concise-ti doesn't enforce arity for you, so validate at the top of `run()`                                              |
+| Variadic positional (`<files...>`)                   | `args: [{ name: 'files', variadic: true }]`, read the tail of `ctx.positionals` yourself                                                                                                     |
+| `process.exit(1)` on failure                         | `return 1` from `run()`. The runtime sets `process.exitCode`; never call `process.exit()` yourself                                                                                           |
+| Top-level `try/catch` around the whole CLI           | Delete it. The runtime already catches thrown errors, formats them as `Error: <message>`, and exits 1. Keep your own `try/catch` only where you want a _better_ message than the generic one |
+| `chalk`/`kleur`/ANSI-escape output                   | `ctx.io.color(text, colorName)`, American spelling; `Color` is `'red' \| 'green' \| 'yellow' \| 'blue' \| 'magenta' \| 'cyan' \| 'gray'`                                                     |
+| `console.log` / `process.stdout.write`               | `ctx.io.write(text)`                                                                                                                                                                         |
+| `console.error` / `process.stderr.write`             | `ctx.io.writeError(text)`                                                                                                                                                                    |
+| `inquirer`/`prompts`/readline-based prompt           | `await ctx.io.prompt(question)`, `await ctx.io.confirm(question, fallback)`, `await ctx.io.select(question, choices)`                                                                        |
+| `ora` or hand-rolled spinner                         | `ctx.io.spinner(text)` → `.succeed(msg)` / `.fail(msg)`                                                                                                                                      |
+| debug logging behind a `--verbose`/`DEBUG` env check | `ctx.logger.debug(...)`, already gated on the `DEBUG` env var; `logger.info/warn/error` always print                                                                                         |
+| Global config object / env lookup                    | `ctx.config` (whatever you built in `main.ts`) and `ctx.env` (a snapshot of `process.env`)                                                                                                   |
+| `process.cwd()` scattered through handlers           | `ctx.cwd`                                                                                                                                                                                    |
 
 ### 3. Delete the old dispatch layer
 
 Once every command from the inventory has a concise-ti file, remove:
+
 - The old argv-parsing library and its setup code (`yargs()`, `program.parse()`, Oclif's `Command` base class boilerplate, etc.)
 - Any hand-written help/usage text generator; `meta.description` and `meta.examples` replace it
 - The old top-level error handler / process-exit-code plumbing
@@ -142,6 +146,7 @@ Once every command from the inventory has a concise-ti file, remove:
 ### 4. Verify parity before cutting over
 
 For every inventory row, run the same invocation against both the old and new CLI and diff stdout/stderr/exit code (modulo cosmetic differences like color codes or spinner frames; compare on substrings/regex, not byte-for-byte). This catches the two most common regressions in this kind of port:
+
 - A flag default that was implicit in the old parser and got dropped when it was made explicit in `FlagSpec`
 - A positional that the old CLI treated as required (and errored without) but which concise-ti leaves as `undefined` unless you add your own check
 
