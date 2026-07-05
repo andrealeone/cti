@@ -365,8 +365,8 @@ describe('run', () => {
   })
 
   test('resolves longest matching route', async () => {
-    const listFn = mock((): Promise<number> => Promise.resolve(0))
-    const usersFn = mock((): Promise<number> => Promise.resolve(1))
+    const listFn = mock((): Promise<number> => Promise.resolve(0)),
+      usersFn = mock((): Promise<number> => Promise.resolve(1))
 
     const manifest: Manifest = {
       entries: [
@@ -392,6 +392,7 @@ describe('run', () => {
   test('passes remaining argv as positionals after route', async () => {
     const runFn = mock((ctx: Context) => {
       expect(ctx.positionals).toEqual(['filter', 'active'])
+
       return 0
     })
 
@@ -400,18 +401,20 @@ describe('run', () => {
     })
 
     await dispatch(manifest, ['users', 'list', 'filter', 'active'])
+
     expect(runFn).toHaveBeenCalled()
   })
 
   test('handles command with no flags defined', async () => {
     const runFn = mock((ctx: Context) => {
       expect(ctx.flags).toBeDefined()
+
       return 0
     })
 
-    const manifest = createTestManifest(['cmd'], 'cmd.ts', (ctx: Context) => {
-      return Promise.resolve(runFn(ctx))
-    })
+    const manifest = createTestManifest(['cmd'], 'cmd.ts', (ctx: Context) =>
+      Promise.resolve(runFn(ctx)),
+    )
 
     const result = await dispatch(manifest, ['cmd', 'positional', 'arg'])
 
@@ -422,8 +425,8 @@ describe('run', () => {
 
 describe('run (directory discovery)', () => {
   function withCapturedConsoleError<T>(fn: () => T): { result: T; messages: string[] } {
-    const original = console.error
-    const messages: string[] = []
+    const original = console.error,
+      messages: string[] = []
 
     console.error = (...args: unknown[]) => {
       messages.push(args.join(' '))
@@ -437,55 +440,66 @@ describe('run (directory discovery)', () => {
   }
 
   test('discovers and runs a command from a real commandsDir next to importMeta.dir', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'cti-runtime-discover-'))
+    const root = mkdtempSync(join(tmpdir(), 'concise-ti-runtime-discover-'))
+
     mkdirSync(join(root, 'commands'))
+
     writeFileSync(
       join(root, 'commands', 'hello.ts'),
       `export default { run: (ctx: any) => { ctx.io.write('hi'); return 0 } }`,
     )
 
-    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
-    const result = await run(config, { dir: root }, ['hello'])
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' },
+      result = await run(config, { dir: root }, ['hello'])
 
     expect(result).toBe(0)
   })
 
   test('returns 1 and reports an error when importMeta is missing and no manifest is set', async () => {
-    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
-
-    const { result, messages } = await withCapturedConsoleError(() => run(config, undefined, ['hello']))
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' },
+      { result, messages } = withCapturedConsoleError(() => run(config, undefined, ['hello']))
 
     expect(await result).toBe(1)
     expect(messages.some((m) => m.includes('requires passing import.meta'))).toBe(true)
   })
 
   test('falls back to the parent directory when commandsDir is not found next to importMeta.dir', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'cti-runtime-parent-'))
+    const root = mkdtempSync(join(tmpdir(), 'concise-ti-runtime-parent-'))
+
     mkdirSync(join(root, 'commands'))
     mkdirSync(join(root, 'sub'))
+
     writeFileSync(
       join(root, 'commands', 'hello.ts'),
       `export default { run: (ctx: any) => { ctx.io.write('parent-hi'); return 0 } }`,
     )
 
-    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
-    const result = await run(config, { dir: join(root, 'sub') }, ['hello'])
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' },
+      result = await run(config, { dir: join(root, 'sub') }, ['hello'])
 
     expect(result).toBe(0)
   })
 
   test('returns 1 and reports an error when discoverManifest fails to load a command', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'cti-runtime-broken-'))
+    const root = mkdtempSync(join(tmpdir(), 'concise-ti-runtime-broken-'))
+
     mkdirSync(join(root, 'commands'))
-    writeFileSync(join(root, 'commands', 'broken.ts'), `export default { this is not valid typescript`)
 
-    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' }
+    writeFileSync(
+      join(root, 'commands', 'broken.ts'),
+      `export default { this is not valid typescript`,
+    )
 
-    const original = console.error
-    const captured: string[] = []
-    console.error = (...args: unknown[]) => captured.push(args.join(' '))
+    const config: Config = { name: 'test-cli', version: '1.0.0', commandsDir: 'commands' },
+      captured: string[] = [],
+      original = console.error
+
+    console.error = (...args: unknown[]) => {
+      captured.push(args.join(' '))
+    }
 
     let result: number
+
     try {
       result = await run(config, { dir: root }, ['broken'])
     } finally {

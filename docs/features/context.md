@@ -86,7 +86,7 @@ run(ctx) {
 ```
 
 Extend `Config` with your own properties (an API base URL, feature flags,
-whatever your commands need); CTI only reads the fields above.
+whatever your commands need); concise-ti only reads the fields above.
 
 ## `io` and `logger`
 

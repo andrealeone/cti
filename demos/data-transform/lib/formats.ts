@@ -6,7 +6,7 @@ export function parseCSV(content: string): Row[] {
   const headers = lines[0].split(',').map((h) => h.trim())
   return lines.slice(1).map((line) => {
     const values = line.split(',').map((v) => v.trim())
-    return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? ''])) as Row
+    return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? '']))
   })
 }
 

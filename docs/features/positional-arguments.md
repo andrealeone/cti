@@ -1,7 +1,7 @@
 # Positional Arguments
 
 Positional arguments are the non-flag tokens left over after routing and flag
-parsing, in the order they were given. CTI exposes them as `ctx.positionals: string[]`,
+parsing, in the order they were given. concise-ti exposes them as `ctx.positionals: string[]`,
 with no per-argument typing or coercion; they're always strings.
 
 ## Accessing them
@@ -57,7 +57,7 @@ interface ArgSpec {
 This is currently **descriptive only**; the runtime doesn't read `args` at
 all today. Declaring `args: [{ name: 'file', required: true }]` documents
 intent (and will back generated `--help` text and validation once that lands,
-per the [Roadmap](../future/roadmap.md)), but CTI won't reject a missing or
+per the [Roadmap](../future/roadmap.md)), but concise-ti won't reject a missing or
 malformed positional for you. Validate and report errors yourself, as in the
 example above.
 

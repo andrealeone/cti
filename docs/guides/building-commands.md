@@ -1,6 +1,6 @@
 ## Building Commands
 
-Commands are the heart of CTI. This guide covers patterns and best practices for writing commands that are robust, testable, and user-friendly.
+Commands are the heart of concise-ti. This guide covers patterns and best practices for writing commands that are robust, testable, and user-friendly.
 
 ### The Anatomy of a Command
 

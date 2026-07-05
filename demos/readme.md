@@ -1,11 +1,11 @@
-# CTI CLI Demos
+# concise-ti CLI Demos
 
-A collection of example CLIs built with CTI, each demonstrating a different
+A collection of example CLIs built with concise-ti, each demonstrating a different
 feature or pattern. They are validated end-to-end by `tests/demos.test.ts`.
 
 ## The real API at a glance
 
-A CTI command is a **`CommandModule`**, a plain object with optional `meta`,
+A concise-ti command is a **`CommandModule`**, a plain object with optional `meta`,
 `flags`, `args`, and a `run(ctx)` function. Commands are mapped to routes in a
 **manifest**, and the **`run()`** dispatcher resolves argv → command, parses flags,
 builds the `Context`, and calls `run`. Return a number from `run` to set the exit code.
@@ -81,7 +81,7 @@ bun build ./main.ts --compile --outfile dist/hello
 ## A few examples
 
 ```bash
-# todo-app: state lives in ~/.cti-todos.json
+# todo-app: state lives in ~/.concise-ti-todos.json
 bun run ./demos/todo-app/main.ts add "Buy groceries"
 bun run ./demos/todo-app/main.ts list
 bun run ./demos/todo-app/main.ts complete 1
@@ -153,7 +153,7 @@ For a discovery-based demo with multiple commands, create files in `commands/` (
 
 ## Feature Showcase
 
-**Core CTI features demonstrated across demos:**
+**Core concise-ti features demonstrated across demos:**
 
 - **CommandModule**: `hello-world`, all demos
 - **Nested routes**: `api-client` (users/list, posts/list)

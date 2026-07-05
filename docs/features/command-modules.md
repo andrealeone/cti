@@ -5,7 +5,7 @@ describing what the command does, what flags/positionals it accepts, and how
 it runs.
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 export default command({
   meta: {

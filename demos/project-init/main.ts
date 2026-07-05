@@ -1,4 +1,4 @@
-import { command, defineManifest, run } from 'cti'
+import { command, defineManifest, run } from 'concise-ti'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -37,7 +37,7 @@ const init = command({
       ctx.io.write('  ✓ tsconfig.json')
     }
 
-    writeFileSync(join(dir, 'README.md'), `# ${name}\n\nGenerated with CTI.\n`)
+    writeFileSync(join(dir, 'README.md'), `# ${name}\n\nGenerated with concise-ti.\n`)
     ctx.io.write('  ✓ README.md')
 
     ctx.io.write(ctx.io.color(`\n✨ Project "${name}" created successfully!`, 'green'))
@@ -45,4 +45,9 @@ const init = command({
   },
 })
 
-void run({ name: 'project-init', bin: 'init', version: '1.0.0', manifest: defineManifest({ init }) })
+void run({
+  name: 'project-init',
+  bin: 'init',
+  version: '1.0.0',
+  manifest: defineManifest({ init }),
+})

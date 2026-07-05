@@ -1,6 +1,6 @@
 # Colors
 
-CTI wraps text in ANSI escape codes through `ctx.io.color()`. Output is only
+concise-ti wraps text in ANSI escape codes through `ctx.io.color()`. Output is only
 colored when it makes sense to: a real terminal, and the user hasn't opted out.
 
 ## `io.color(text, color)`

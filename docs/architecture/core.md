@@ -1,6 +1,6 @@
 ## Core Module: Runtime, Router & Parser
 
-The core module is CTI's command dispatch engine, where argv becomes command
+The core module is concise-ti's command dispatch engine, where argv becomes command
 execution. It's four files:
 
 - **Runtime** (`runtime.ts`): `run()` and `defineManifest()`

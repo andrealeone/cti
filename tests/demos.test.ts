@@ -100,11 +100,15 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
   ],
   'api-client': [
     { name: 'lists users', args: ['users', 'list'], stdout: [/Alice/, /Bob/] },
-    { name: 'gets a post', args: ['posts', 'get', '1'], stdout: [/Getting Started with CTI/] },
+    {
+      name: 'gets a post',
+      args: ['posts', 'get', '1'],
+      stdout: [/Getting Started with concise-ti/],
+    },
     {
       name: 'limits a post listing via a typed flag',
       args: ['posts', 'list', '--limit', '1'],
-      stdout: [/Getting Started with CTI/],
+      stdout: [/Getting Started with concise-ti/],
     },
     {
       name: 'collapses posts/index.ts into the posts route',
@@ -207,7 +211,7 @@ async function runCase(demo: string, c: DemoCase) {
     NO_COLOR: '1',
     ...c.env,
   }
-  if (c.isolateHome) env.HOME = mkdtempSync(join(tmpdir(), `cti-demo-${demo}-`))
+  if (c.isolateHome) env.HOME = mkdtempSync(join(tmpdir(), `concise-ti-demo-${demo}-`))
 
   const proc = Bun.spawn(['bun', 'run', cli, ...c.args], {
     cwd: c.isolateHome ? env.HOME : join(DEMOS_DIR, demo),
@@ -259,7 +263,7 @@ for (const demo of demos) {
 
 describe('demo: interactive-io (isTTY detection)', () => {
   test('list uses a plain tab-separated format when stdout is piped', async () => {
-    const home = mkdtempSync(join(tmpdir(), 'cti-demo-interactive-io-'))
+    const home = mkdtempSync(join(tmpdir(), 'concise-ti-demo-interactive-io-'))
     const shared = { isolateHome: false as const, env: { HOME: home } }
 
     const seeded = await runCase('interactive-io', {

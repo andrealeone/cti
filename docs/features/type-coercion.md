@@ -1,6 +1,6 @@
 # Type Coercion
 
-Node's `parseArgs` only understands `string` and `boolean`. CTI adds a coercion
+Node's `parseArgs` only understands `string` and `boolean`. concise-ti adds a coercion
 step on top so `ctx.flags` matches the type each flag declares, with no manual
 casting in handlers.
 
@@ -48,7 +48,7 @@ flags: { verbose: { type: 'boolean' } }
 flags: { timeout: { type: 'number', default: 5000 } }
 ```
 
-`5000` is already a `number`, so CTI uses it as-is when `--timeout` is omitted.
+`5000` is already a `number`, so concise-ti uses it as-is when `--timeout` is omitted.
 
 ## Multiple values
 
@@ -61,7 +61,7 @@ flags: { ports: { type: 'number', multiple: true } }
 
 ## What coercion doesn't do
 
-CTI stops at `string` / `number` / `boolean` on purpose: no dates, URLs, or
+concise-ti stops at `string` / `number` / `boolean` on purpose: no dates, URLs, or
 enum parsing. That logic depends on your domain (timezone? version string vs.
 float?), so it belongs in your handler:
 

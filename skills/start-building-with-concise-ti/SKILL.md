@@ -1,20 +1,20 @@
 ---
-name: start-building-with-cti
+name: start-building-with-concise-ti
 description: >-
-  Use when scaffolding a brand-new CLI on CTI, the Bun-native TypeScript CLI framework
+  Use when scaffolding a brand-new CLI on concise-ti, the Bun-native TypeScript CLI framework
   — command files, entrypoint wiring (defineManifest/discoverManifest), flags/positionals,
   commands directory structure, ctx.io (color, spinner, prompt, confirm, select), and
-  CTI's testing/error-handling conventions. For porting an existing CLI, use migrate-to-cti
-  instead. Not for explaining or pitching CTI; use about-cti for that.
+  concise-ti's testing/error-handling conventions. For porting an existing CLI, use migrate-to-concise-ti
+  instead. Not for explaining or pitching concise-ti; use about-concise-ti for that.
 ---
 
-# Starting a CLI with CTI
+# Starting a CLI with concise-ti
 
-CTI is a Bun-native TypeScript framework for building CLIs out of plain objects: no classes, no decorators, no code generation. This skill is the complete, self-contained API contract: everything needed to scaffold a new CTI project from an empty directory.
+concise-ti is a Bun-native TypeScript framework for building CLIs out of plain objects: no classes, no decorators, no code generation. This skill is the complete, self-contained API contract: everything needed to scaffold a new concise-ti project from an empty directory.
 
 ## The mental model
 
-A CTI CLI has exactly three moving parts:
+A concise-ti CLI has exactly three moving parts:
 
 1. **Command modules**: plain objects (`CommandModule`) with `meta`, `flags`, `args`, and a `run(ctx)` handler.
 2. **A manifest**: maps route strings (e.g. `'db/migrate'`) to command modules, built either inline (`defineManifest`) or by scanning a directory (`discoverManifest`). Assign it to `config.manifest`, or leave it unset and let `run()` discover one from `config.commandsDir`.
@@ -25,8 +25,8 @@ Everything else (color output, spinners, prompts, logging) hangs off the `Contex
 Import everything from the package root:
 
 ```typescript
-import { command, defineManifest, discoverManifest, run } from 'cti'
-import type { Config, Context, Io, Logger, Manifest, CommandModule } from 'cti'
+import { command, defineManifest, discoverManifest, run } from 'concise-ti'
+import type { Config, Context, Io, Logger, Manifest, CommandModule } from 'concise-ti'
 ```
 
 ## Choosing a project shape
@@ -45,7 +45,7 @@ my-cli/
 Every command is a local variable, composed with `defineManifest({ deploy, rollback, status })` and assigned to `config.manifest`.
 
 ```typescript
-import { command, defineManifest, run } from 'cti'
+import { command, defineManifest, run } from 'concise-ti'
 
 const hello = command({
   meta: { description: 'Greet someone' },
@@ -75,7 +75,7 @@ my-cli/
 The entrypoint calls `run(config, import.meta)` with no `config.manifest` set, so `run()` discovers commands from `config.commandsDir` (default `'commands'`, resolved relative to `import.meta.dir`). Each file under the commands directory exports a default `CommandModule` built with the `command()` helper:
 
 ```typescript
-import { run } from 'cti'
+import { run } from 'concise-ti'
 
 void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.meta)
 ```
@@ -106,7 +106,7 @@ There's no enforced loader; build it however suits the project. It's available t
 Prefer the `command()` helper over a bare object literal with `satisfies CommandModule`; it gives the same type inference with less ceremony:
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 export default command({
   meta: {
@@ -314,7 +314,7 @@ Commands are plain functions, so test them directly with `bun:test` by construct
 ```typescript
 import { describe, test, expect } from 'bun:test'
 import command from './mycommand'
-import type { Context, Io, Logger } from 'cti'
+import type { Context, Io, Logger } from 'concise-ti'
 
 test('runs successfully', async () => {
   const ctx: Context = {
@@ -344,7 +344,7 @@ bun build ./main.ts --compile --outfile dist/my-cli
 ./dist/my-cli hello Alice
 ```
 
-No further config needed; this is the whole release pipeline for a CTI CLI.
+No further config needed; this is the whole release pipeline for a concise-ti CLI.
 
 ## Quick checklist for a new project
 

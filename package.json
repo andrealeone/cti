@@ -1,13 +1,38 @@
 {
-  "name": "cti",
-  "version": "1.0.0-rc.0",
+  "name": "concise-ti",
+  "version": "0.1.0-rc.0",
   "author": "Andrea Leone <git@leone.gdn>",
-  "description": "Bun-Native TypeScript CLI Framework",
+  "description": "Concise Terminal Interface",
+  "license": "MIT",
+  "homepage": "https://github.com/andrealeone/cti#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrealeone/cti.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andrealeone/cti/issues"
+  },
+  "keywords": [
+    "cli",
+    "bun",
+    "typescript",
+    "framework",
+    "command-line"
+  ],
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "bin": {
-    "app": "./dist/cli.js"
+  "files": [
+    "src",
+    "tsconfig.json",
+    "readme.md",
+    "license.md"
+  ],
+  "engines": {
+    "bun": ">=1.3"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "test": "bun test",

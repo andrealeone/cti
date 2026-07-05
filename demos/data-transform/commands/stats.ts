@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { readFileSync } from 'node:fs'
 import { parseCSV } from '../lib/formats'
 

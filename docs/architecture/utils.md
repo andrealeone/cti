@@ -33,7 +33,7 @@ A thrown coercion error is caught by `run()`'s dispatcher, which writes a
 message to stderr and returns exit code `1`, so commands never see a malformed
 value.
 
-CTI deliberately stops at these three primitive types. Semantic coercion
+concise-ti deliberately stops at these three primitive types. Semantic coercion
 (dates, URLs, enums beyond `choices`) belongs in your handler, where the right
 validation and error message depend on your domain:
 

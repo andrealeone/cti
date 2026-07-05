@@ -1,4 +1,4 @@
-import { command, defineManifest, run } from 'cti'
+import { command, defineManifest, run } from 'concise-ti'
 
 const hello = command({
   meta: { description: 'Greet someone' },

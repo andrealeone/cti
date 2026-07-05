@@ -1,10 +1,10 @@
-## CTI Documentation
+## concise-ti Documentation
 
-A complete guide to CTI, a Bun-native TypeScript framework for building
+A complete guide to concise-ti, a Bun-native TypeScript framework for building
 command-line tools.
 
 ```
-principles/          why CTI exists, what it trades off
+principles/          why concise-ti exists, what it trades off
 getting-started/      five minutes to a working CLI
 concepts/              the mental model: commands, manifest, runtime
 guides/                 patterns, examples, runnable demos
@@ -15,11 +15,11 @@ contributing/           dev workflow, testing
 future/                 roadmap
 ```
 
-### New to CTI?
+### New to concise-ti?
 
 1. **[Quick Start](getting-started/quickstart.md)**: install, first command, first flag, compiled binary
 2. **[Core Concepts](concepts/core-concepts.md)**: commands, manifest, runtime, in one page
-3. **[Vision](principles/vision.md)** and **[Philosophy](principles/philosophy.md)** explain why CTI exists and what it deliberately leaves out
+3. **[Vision](principles/vision.md)** and **[Philosophy](principles/philosophy.md)** explain why concise-ti exists and what it deliberately leaves out
 
 ### Building a CLI
 

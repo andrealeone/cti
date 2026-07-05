@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { loadProfiles, saveProfiles, generateId } from '../lib/storage'
 
 const ROLES = ['admin', 'user', 'viewer'] as const

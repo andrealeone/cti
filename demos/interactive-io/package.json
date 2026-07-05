@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-interactive-io",
+  "name": "concise-ti-demo-interactive-io",
   "version": "1.0.0",
-  "description": "User profile manager showcasing CTI's interactive and logging features",
+  "description": "User profile manager showcasing concise-ti's interactive and logging features",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

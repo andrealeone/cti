@@ -1,4 +1,4 @@
-import { command, defineManifest, run } from 'cti'
+import { command, defineManifest, run } from 'concise-ti'
 
 const ENVIRONMENTS = ['staging', 'production'] as const
 

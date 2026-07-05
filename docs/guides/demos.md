@@ -1,7 +1,7 @@
 ## Demos
 
 The [`/demos`](../../demos) folder holds small, self-contained example CLIs
-built with CTI, each one a single readable file (or a small `commands/` tree)
+built with concise-ti, each one a single readable file (or a small `commands/` tree)
 you can run, read, copy, and adapt. They cover both onboarding patterns
 (`defineManifest` for a handful of inline commands, `discoverManifest`/filesystem
 discovery for many, including `index.ts` route collapsing) and every `ctx.io`

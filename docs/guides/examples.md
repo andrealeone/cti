@@ -1,6 +1,6 @@
 ## Examples
 
-Real-world patterns for building CTI CLIs. Each example below is a `CommandModule`; wire one or more into a CLI with `defineManifest` + `run` (see the [Quick Start](../getting-started/quickstart.md) and [Demos](demos.md)).
+Real-world patterns for building concise-ti CLIs. Each example below is a `CommandModule`; wire one or more into a CLI with `defineManifest` + `run` (see the [Quick Start](../getting-started/quickstart.md) and [Demos](demos.md)).
 
 ### Hello World
 

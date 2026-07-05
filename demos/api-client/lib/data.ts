@@ -1,4 +1,4 @@
-import type { Context } from 'cti'
+import type { Context } from 'concise-ti'
 
 // A real client would fetch over HTTP; demos use a fixed dataset so output is
 // deterministic and the demo runs offline.
@@ -9,8 +9,8 @@ export const DATA = {
     { id: 3, name: 'Charlie', email: 'charlie@example.com' },
   ],
   posts: [
-    { id: 1, title: 'Getting Started with CTI', author: 'Alice' },
-    { id: 2, title: 'Advanced CTI Patterns', author: 'Bob' },
+    { id: 1, title: 'Getting Started with concise-ti', author: 'Alice' },
+    { id: 2, title: 'Advanced concise-ti Patterns', author: 'Bob' },
   ],
 }
 
