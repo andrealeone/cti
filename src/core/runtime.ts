@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 
 import type { Config } from '@/types/config'
@@ -39,17 +39,63 @@ export function defineManifest(routes: Record<string, CommandModule>): Manifest 
  * `void run(config)` instead of `process.exit(await run(config))`. This only
  * happens when `argv` is omitted (the entrypoint case); callers passing an
  * explicit `argv` (e.g. tests) get the exit code back without the side effect.
+ *
+ * When `CONCISE_TI_EXTRACT_MANIFEST` is set, dispatch is skipped entirely in
+ * favor of writing the resolved manifest to that path as JSON. `concise-ti
+ * compile` sets this to read a `commandsDir` CLI's manifest ahead of time,
+ * without requiring entrypoints to change how they call `run()`.
  */
 export async function run(
   config: Config,
   importMeta?: { dir: string },
   argv?: string[],
 ): Promise<number> {
-  const exitCode = await dispatch(config, importMeta, argv)
+  const extractPath = process.env.CONCISE_TI_EXTRACT_MANIFEST
+
+  const exitCode = extractPath
+    ? await extractManifest(config, importMeta, extractPath)
+    : await dispatch(config, importMeta, argv)
 
   if (argv === undefined) process.exitCode = exitCode
 
   return exitCode
+}
+
+async function extractManifest(
+  config: Config,
+  importMeta: { dir: string } | undefined,
+  outPath: string,
+): Promise<number> {
+  if (config.manifest) {
+    writeFileSync(outPath, JSON.stringify({ inline: true }))
+    return 0
+  }
+
+  if (!importMeta?.dir) {
+    console.error(
+      'Error: discovering commands from config.commandsDir requires passing import.meta (with a dir) as the second argument to run().',
+    )
+    return 1
+  }
+
+  const resolvedCommandsDir = resolveCommandsDir(importMeta.dir, config.commandsDir ?? 'commands')
+
+  try {
+    const manifest = await discoverManifest(resolvedCommandsDir),
+      entries = manifest.entries.map((entry) => ({
+        route: entry.route,
+        sourcePath: entry.sourcePath,
+        meta: entry.meta ?? null,
+      }))
+
+    writeFileSync(outPath, JSON.stringify({ inline: false, entries }))
+    return 0
+  } catch (error) {
+    console.error(
+      `Error: failed to discover commands in "${resolvedCommandsDir}": ${error instanceof Error ? error.message : String(error)}`,
+    )
+    return 1
+  }
 }
 
 /**
@@ -57,7 +103,7 @@ export async function run(
  * the parent directory when the entrypoint lives in a subdirectory but
  * `commands/` sits at the project root.
  */
-function resolveCommandsDir(importMetaDir: string, commandsDir: string): string {
+export function resolveCommandsDir(importMetaDir: string, commandsDir: string): string {
   const resolved = join(importMetaDir, commandsDir)
 
   if (existsSync(resolved)) return resolved
@@ -65,6 +111,14 @@ function resolveCommandsDir(importMetaDir: string, commandsDir: string): string 
   const parentCommandsDir = join(dirname(importMetaDir), commandsDir)
 
   return existsSync(parentCommandsDir) ? parentCommandsDir : resolved
+}
+
+/** A compiled `bun build --compile` binary runs against a virtual filesystem
+ * mounted at `/$bunfs/`, where `discoverManifest`'s directory scan finds
+ * nothing. `concise-ti compile` pre-populates `generated-manifest.ts` for
+ * exactly this case. */
+function isCompiledBinaryDir(dir: string): boolean {
+  return dir.startsWith('/$bunfs/')
 }
 
 /** Resolve `config.manifest`, or auto-discover one from `config.commandsDir`. */
@@ -79,6 +133,22 @@ async function resolveManifest(
       'Error: discovering commands from config.commandsDir requires passing import.meta (with a dir) as the second argument to run().',
     )
     return 1
+  }
+
+  if (isCompiledBinaryDir(importMeta.dir)) {
+    const generated = (await import('@/core/generated-manifest')) as {
+      default: Manifest
+      generated: boolean
+    }
+
+    if (!generated.generated) {
+      console.error(
+        "Error: this binary was compiled with `bun build --compile` directly. A commandsDir CLI must be compiled with `concise-ti compile` instead, since discoverManifest cannot scan a compiled binary's virtual filesystem.",
+      )
+      return 1
+    }
+
+    return generated.default
   }
 
   const resolvedCommandsDir = resolveCommandsDir(importMeta.dir, config.commandsDir ?? 'commands')
