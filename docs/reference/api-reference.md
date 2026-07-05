@@ -193,6 +193,17 @@ Walks `commandsDir`, building a route from each `.ts` file's path (skipping
 importing its default export. Not exported from `concise-ti` directly; `run()` calls
 it for you when `config.manifest` is unset.
 
+#### `compile(argv)`
+
+```typescript
+function compile(argv: string[]): Promise<number>
+```
+
+Backs the `concise-ti compile <entry> [...bun build flags]` bin command. Not
+exported from `concise-ti` directly. See
+[Manifest](../features/manifest.md#compiling-a-commandsdir-cli-to-a-binary)
+and [Core Module](../architecture/core.md#compileargv).
+
 #### `buildRouteLookup(manifest)`
 
 ```typescript
@@ -288,6 +299,7 @@ import { discoverManifest } from '@/core/discovery'
 import { buildRouteLookup, resolveRoute } from '@/core/router'
 import { parseAndCoerce, toParseArgsOptions } from '@/core/parser'
 import { command } from '@/core/command'
+import { compile } from '@/core/compile'
 
 // @/io/
 import { createIo, createLogger } from '@/io/index'

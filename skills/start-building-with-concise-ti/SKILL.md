@@ -17,7 +17,7 @@ concise-ti is a Bun-native TypeScript framework for building CLIs out of plain o
 A concise-ti CLI has exactly three moving parts:
 
 1. **Command modules**: plain objects (`CommandModule`) with `meta`, `flags`, `args`, and a `run(ctx)` handler.
-2. **A manifest**: maps route strings (e.g. `'db/migrate'`) to command modules, built either inline (`defineManifest`) or by scanning a directory (`discoverManifest`). Assign it to `config.manifest`, or leave it unset and let `run()` discover one from `config.commandsDir`.
+2. **A manifest**: maps route strings (e.g. `'db/migrate'`) to command modules, built either inline (`defineManifest`) or by scanning a directory (`discoverManifest`). Default to the directory-scanned shape: leave `config.manifest` unset and let `run()` discover one from `config.commandsDir`. Only assign `config.manifest` directly with `defineManifest` if there's a concrete reason to avoid a commands directory.
 3. **The runtime**: `run(config, importMeta?)` resolves argv against the manifest using longest-prefix match, lazily loads the matched command, parses/coerces its flags, builds a `Context`, and invokes the command's `run()`. It returns the process exit code.
 
 Everything else (color output, spinners, prompts, logging) hangs off the `Context` object passed into every handler.
@@ -31,33 +31,7 @@ import type { Config, Context, Io, Logger, Manifest, CommandModule } from 'conci
 
 ## Choosing a project shape
 
-Two valid shapes; pick based on command count, and don't mix them without reason.
-
-**Small CLI (a handful of commands): inline manifest, no commands directory:**
-
-```
-my-cli/
-├── main.ts          # entrypoint: defines commands inline, builds config.manifest with defineManifest, calls run
-├── package.json
-└── tsconfig.json
-```
-
-Every command is a local variable, composed with `defineManifest({ deploy, rollback, status })` and assigned to `config.manifest`.
-
-```typescript
-import { command, defineManifest, run } from 'concise-ti'
-
-const hello = command({
-  meta: { description: 'Greet someone' },
-  run(ctx) {
-    ctx.io.write(`Hello, ${ctx.positionals[0] ?? 'World'}!`)
-  },
-})
-
-void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) })
-```
-
-**Larger CLI (many commands): directory-scanned manifest:**
+Default to the directory-scanned shape for every new project, regardless of how many commands it starts with: a one-line `main.ts` plus command auto-discovery. It requires no more setup than the inline shape for a single command, and the entrypoint never has to change again as commands are added.
 
 ```
 my-cli/
@@ -86,6 +60,30 @@ void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.m
 
 You can also call `discoverManifest(commandsDir)` yourself and assign the result to `config.manifest`, which is useful if you want to inspect or modify entries before dispatch. Either way, a `Manifest` ends up on `config.manifest`.
 
+**Inline manifest, no commands directory:** only reach for this if there's a concrete reason to avoid a `commands/` directory (e.g. a single-file distributable with no other files):
+
+```
+my-cli/
+├── main.ts          # entrypoint: defines commands inline, builds config.manifest with defineManifest, calls run
+├── package.json
+└── tsconfig.json
+```
+
+Every command is a local variable, composed with `defineManifest({ deploy, rollback, status })` and assigned to `config.manifest`.
+
+```typescript
+import { command, defineManifest, run } from 'concise-ti'
+
+const hello = command({
+  meta: { description: 'Greet someone' },
+  run(ctx) {
+    ctx.io.write(`Hello, ${ctx.positionals[0] ?? 'World'}!`)
+  },
+})
+
+void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ hello }) })
+```
+
 ## Config
 
 ```typescript
@@ -99,7 +97,7 @@ interface Config {
 }
 ```
 
-There's no enforced loader; build it however suits the project. It's available to every command as `ctx.config`. Set `manifest` directly for the inline shape, or leave it unset and pass `import.meta` to `run()` so it can discover one from `commandsDir` for the directory-scanned shape. If `bin` is omitted, it defaults to `name`.
+There's no enforced loader; build it however suits the project. It's available to every command as `ctx.config`. Default to leaving `manifest` unset and passing `import.meta` to `run()` so it can discover one from `commandsDir`; only set `manifest` directly (via `defineManifest`) for the inline shape. If `bin` is omitted, it defaults to `name`.
 
 ## Writing a command
 
@@ -339,16 +337,24 @@ Mirror your test layout to your source layout for consistency, e.g. `commands/ad
 
 ## Building a binary
 
+A directory-scanned CLI (`commandsDir`/`discoverManifest`) must compile with
+`concise-ti compile`, not `bun build --compile` directly: a compiled binary
+runs against a virtual filesystem, so `discoverManifest`'s directory scan
+finds nothing there. `concise-ti compile` runs the entry once as a real
+subprocess to resolve its manifest, then compiles the same, unmodified entry;
+no changes needed to how the entrypoint calls `run()`.
+
 ```bash
-bun build ./main.ts --compile --outfile dist/my-cli
+bunx concise-ti compile ./main.ts --outfile dist/my-cli
 ./dist/my-cli hello Alice
 ```
 
-No further config needed; this is the whole release pipeline for a concise-ti CLI.
+An inline-manifest CLI (`defineManifest`, no `commands/` directory) has no
+filesystem scan to break, so it compiles directly with `bun build --compile`.
 
 ## Quick checklist for a new project
 
-1. Decide: inline (`defineManifest`) or directory-scanned (`discoverManifest`). Pick one shape and stick to it.
+1. Default to the directory-scanned shape (`discoverManifest` via `commandsDir`) unless there's a concrete reason to use the inline shape (`defineManifest`). Pick one shape and stick to it.
 2. Scaffold `main.ts`, `package.json`, `tsconfig.json`, and (for the directory-scanned shape) a commands directory.
 3. Build each command with `command({ meta, flags, run })`. `meta` and `flags` are optional, `run` is required.
 4. Type `Context<YourFlagsInterface>` if the command declares flags, so `ctx.flags` isn't `any`.

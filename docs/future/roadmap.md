@@ -13,6 +13,7 @@ Stabilise the core framework:
 - [Done] Argument and flag parsing with type coercion
 - [Done] Type system
 - [Done] I/O color output with TTY / NO_COLOR detection
+- [Done] `concise-ti compile`: makes `commandsDir` discovery work in `bun build --compile` binaries
 - [In Progress] Real `prompt` / `confirm` / `select` implementations (currently non-interactive stubs)
 - [In Progress] Real spinner animation (currently a no-op stub)
 - [In Progress] Complete documentation
@@ -29,7 +30,6 @@ Make the existing dispatcher and parser do more:
 - **`--help` and `--version`**: generated from command `meta` and `Config`
 - **Friendlier errors**: "did you mean?" suggestions on unknown commands
 - **Shell completions**: generate bash, zsh, and fish completion from the manifest
-- **Manifest auto-generation**: scan a commands directory into a manifest (today `defineManifest` is written by hand)
 
 **Why:** These are the natural next steps for the dispatcher and parser that already ship.
 

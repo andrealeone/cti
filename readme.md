@@ -124,9 +124,14 @@ bun run ./main.ts fib 10 --sequence
 Compile it to a standalone binary:
 
 ```bash
-bun build ./main.ts --compile --outfile dist/my-cli
+bunx concise-ti compile ./main.ts --outfile dist/my-cli
 ./dist/my-cli fib 10 --sequence
 ```
+
+A CLI built entirely with `defineManifest`, no `commands/` directory, can
+compile directly with `bun build --compile`; `concise-ti compile` is only
+needed to make filesystem-discovered commands work inside the compiled
+binary. See [Manifest](docs/features/manifest.md).
 
 <br/><br/>
 

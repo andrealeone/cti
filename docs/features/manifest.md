@@ -90,14 +90,45 @@ Every entry carries an `importer`, not the loaded module. Only the command that
 matches the resolved route is ever imported, so a CLI with a hundred commands
 pays no more startup cost than one with a single command.
 
-## No separate build step
+## Compiling a `commandsDir` CLI to a binary
 
-There is no `concise-ti build` or manifest-generation step. `discoverManifest` runs
-the same `readdirSync` + dynamic `import()` walk whether the entrypoint is run
-with `bun run` or invoked from a `bun build --compile` binary; behavior is
-identical in both, because it's the same function doing the same work.
+`discoverManifest` scans real files with `readdirSync`, which only works under
+`bun run`. A `bun build --compile` binary executes against a virtual
+filesystem with no real `commands/` directory to scan, so calling `run()`
+directly inside a compiled binary throws:
+
+```
+Error: failed to discover commands in "/$bunfs/root/commands": ENOENT: ...
+```
+
+`defineManifest`-based CLIs are unaffected (an inline manifest is just data,
+no filesystem access involved); compile those with `bun build --compile`
+exactly as documented elsewhere. For a `commandsDir` CLI, use `concise-ti
+compile` instead of `bun build --compile` directly — your entrypoint doesn't
+change at all, still just:
+
+```typescript
+import { run } from 'concise-ti'
+
+void run({ name: 'my-cli', version: '1.0.0', commandsDir: 'commands' }, import.meta)
+```
+
+```bash
+concise-ti compile ./main.ts --outfile dist/my-cli
+```
+
+It runs the entry once as a real (uncompiled) subprocess to resolve its
+manifest — `discoverManifest` works fine there — then temporarily substitutes
+the framework's own generated-manifest module with the result before
+compiling the entry, unchanged. `run()` imports that module instead of
+scanning the filesystem when it detects it's executing inside a compiled
+binary. Nothing is written into your project tree; the substitution happens
+inside `node_modules/concise-ti/` and is reverted immediately after the
+build, so there's nothing to `.gitignore` and nothing for `bun run` to ever
+see differently.
 
 ## See also
 
 - [Command Routing](command-routing.md): how the router matches a manifest against argv
 - [Core Concepts](../concepts/core-concepts.md): where the manifest fits in the dispatch flow
+- [Compiling a Binary](../guides/compiling-a-binary.md): step-by-step guide, flags, and troubleshooting

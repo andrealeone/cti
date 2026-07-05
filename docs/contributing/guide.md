@@ -68,16 +68,20 @@ reproduce, and your environment (`bun --version`, OS):
 ## Bug: colors not applied on Windows Terminal
 
 ### Expected
+
 `ctx.io.color(...)` output should be colored in an interactive terminal.
 
 ### Actual
+
 Output is plain text, no ANSI codes.
 
 ### Steps
+
 1. Run `my-cli deploy` in Windows Terminal
 2. Output has no color
 
 ### Environment
+
 Bun 1.3.14, Windows 11, Windows Terminal
 ```
 
@@ -90,9 +94,11 @@ doesn't the current API let you do it cleanly?
 ## Feature: shell completions
 
 ### Use case
+
 Tab-completing subcommands and flags in bash/zsh.
 
 ### Proposal
+
 Generate completion scripts from the manifest, exposed as `--completions bash`.
 ```
 

@@ -22,8 +22,12 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "bin": {
+    "concise-ti": "./bin/cli.ts"
+  },
   "files": [
     "src",
+    "bin",
     "tsconfig.json",
     "readme.md",
     "license.md"

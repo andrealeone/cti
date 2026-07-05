@@ -44,7 +44,7 @@ const registryCheck = await $`npm view ${name}@${version} version`.quiet().nothr
   gitTagExists = (await $`git tag -l v${version}`.text()).trim().length > 0
 
 if (publishedOnNpm) console.warn(`\n${pkg} is already published on npm. Skipping publish step.`)
-else console.log(`\nPublish ${pkg}:\n\n  npm publish\n`)
+else console.log(`\nPublish ${pkg}:\n\n  npm publish --tag latest\n`)
 
 if (gitTagExists) {
   console.warn(`Git tag v${version} already exists. Skipping tag/release steps.\n\n`)

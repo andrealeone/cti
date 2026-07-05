@@ -71,8 +71,15 @@ bun run ./main.ts hello Alice --formal
 
 ### Compile to a binary
 
+Commands discovered from a `commands/` directory need `concise-ti compile`,
+not `bun build --compile` directly: a compiled binary runs against a virtual
+filesystem that `discoverManifest`'s directory scan can't see. `concise-ti
+compile` runs the entry once to resolve its manifest, then compiles the same,
+unchanged entry. See [Compiling a Binary](../guides/compiling-a-binary.md) for
+the full guide.
+
 ```bash
-bun build ./main.ts --compile --outfile dist/my-cli
+bunx concise-ti compile ./main.ts --outfile dist/my-cli
 ./dist/my-cli hello Bob
 # Hello, Bob!
 ```
@@ -81,5 +88,6 @@ bun build ./main.ts --compile --outfile dist/my-cli
 
 - **[Core Concepts](../concepts/core-concepts.md)**: the mental model: commands, manifest, runtime
 - **[Building Commands](../guides/building-commands.md)**: flags, positionals, I/O, error handling
+- **[Compiling a Binary](../guides/compiling-a-binary.md)**: which compile command your CLI needs, and why
 - **[Manifest](../features/manifest.md)**: when to prefer an inline `defineManifest` over filesystem discovery
 - **[Examples](../guides/examples.md)** and **[Demos](../guides/demos.md)**: more real-world usage

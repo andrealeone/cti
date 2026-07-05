@@ -24,11 +24,11 @@ app command > file.txt   # stdout is not a TTY
 
 ## What changes with TTY status
 
-| Interactive (TTY)     | Non-interactive (piped/redirected) |
-| ---------------------- | ----------------------------------- |
-| Colors applied          | Colors stripped                     |
-| Spinners animate*        | Spinners print once, no animation*   |
-| Prompts read input*       | Prompts return their fallback*        |
+| Interactive (TTY)    | Non-interactive (piped/redirected)  |
+| -------------------- | ----------------------------------- |
+| Colors applied       | Colors stripped                     |
+| Spinners animate\*   | Spinners print once, no animation\* |
+| Prompts read input\* | Prompts return their fallback\*     |
 
 \* Spinner and prompt implementations are currently no-op stubs. See
 [Spinners](spinners.md) and [Prompts](prompts.md). Color is the one primitive
