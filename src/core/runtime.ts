@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path'
 
 import type { Config } from '@/types/config'
 import type { Context } from '@/types/context'
-import type { Manifest } from '@/types/manifest'
+import type { Manifest, ManifestEntry } from '@/types/manifest'
 import type { CommandModule } from '@/types/command'
 
 import { parseAndCoerce } from '@/core/parser'
@@ -201,6 +201,92 @@ async function invokeCommand(
   }
 }
 
+/** `<bin> <version> (built with concise-ti)`, shared by the default `help` and `version` commands. */
+function formatHeading(config: Config): string {
+  return `${config.bin} ${config.version} (built with concise-ti)`
+}
+
+/** Builds the default `help` command, listing every non-hidden route in `entries`. */
+function buildHelpCommand(entries: ManifestEntry[]): CommandModule {
+  return {
+    meta: { description: 'Show available commands' },
+    flags: { json: { type: 'boolean', description: 'Output as JSON' } },
+    run(ctx) {
+      const visible = entries.filter((entry) => !entry.meta?.hidden)
+
+      if (ctx.flags.json) {
+        ctx.io.write(
+          JSON.stringify({
+            name: ctx.config.bin,
+            version: ctx.config.version,
+            commands: visible.map((entry) => ({
+              route: entry.route.join('/'),
+              description: entry.meta?.description ?? null,
+            })),
+          }),
+        )
+
+        return 0
+      }
+
+      const width = visible.reduce((max, entry) => Math.max(max, entry.route.join('/').length), 0),
+        lines = [formatHeading(ctx.config), '', 'Commands:']
+
+      for (const entry of visible) {
+        const route = entry.route.join('/'),
+          description = entry.meta?.description
+
+        lines.push(description ? `  ${route.padEnd(width + 2)}${description}` : `  ${route}`)
+      }
+
+      ctx.io.write(lines.join('\n'))
+
+      return 0
+    },
+  }
+}
+
+/** Builds the default `version` command. */
+function buildVersionCommand(): CommandModule {
+  return {
+    meta: { description: 'Show CLI version' },
+    run(ctx) {
+      ctx.io.write(formatHeading(ctx.config))
+
+      return 0
+    },
+  }
+}
+
+/**
+ * Appends default `help`/`version` entries to `entries` (filtered by `config.skip`)
+ * for any of those routes not already defined, overridden, or skipped. The `help`
+ * listing reflects the final entry set, defaults included.
+ */
+function withDefaultCommands(entries: ManifestEntry[], config: Config): ManifestEntry[] {
+  const skip = new Set(config.skip ?? []),
+    existingRoutes = new Set(entries.map((entry) => entry.route.join('/'))),
+    finalEntries = [...entries]
+
+  if (!skip.has('help') && !existingRoutes.has('help'))
+    finalEntries.push({
+      route: ['help'],
+      sourcePath: '<default:help>',
+      importer: () => Promise.resolve({ default: buildHelpCommand(finalEntries) }),
+      meta: { description: 'Show available commands' },
+    })
+
+  if (!skip.has('version') && !existingRoutes.has('version'))
+    finalEntries.push({
+      route: ['version'],
+      sourcePath: '<default:version>',
+      importer: () => Promise.resolve({ default: buildVersionCommand() }),
+      meta: { description: 'Show CLI version' },
+    })
+
+  return finalEntries
+}
+
 async function dispatch(
   config: Config,
   importMeta?: { dir: string },
@@ -218,7 +304,12 @@ async function dispatch(
   // Use name as default for bin if not provided
   if (!config.bin) config.bin = config.name
 
-  const match = resolveRoute(resolvedArgv, buildRouteLookup(manifest))
+  const skip = new Set(config.skip ?? []),
+    filteredEntries = manifest.entries.filter((entry) => !skip.has(entry.route.join('/'))),
+    entries = withDefaultCommands(filteredEntries, config),
+    argvForMatch = resolvedArgv.length > 0 ? resolvedArgv : ['help']
+
+  const match = resolveRoute(argvForMatch, buildRouteLookup({ entries }))
 
   if (!match) {
     io.writeError(`Unknown command: ${resolvedArgv.join(' ') || '(none)'}`)

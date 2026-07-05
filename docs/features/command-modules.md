@@ -68,10 +68,12 @@ interface CommandMeta {
 }
 ```
 
-All optional, all currently just data carried on the manifest entry.
-`description`/`examples` will back generated `--help` output once that lands
-(see the [Roadmap](../future/roadmap.md)); `aliases` and `hidden` are likewise
-reserved for the help/routing system, not yet read anywhere.
+All optional. `description` is read by the default `help` command (see
+[Default Commands](default-commands.md)): non-`hidden` entries are listed with
+their `description` alongside the route. `examples` is currently just data
+carried on the manifest entry, reserved for richer generated help later (see
+the [Roadmap](../future/roadmap.md)). `aliases` is likewise reserved, not yet
+read anywhere.
 
 ## `flags` and `args`
 

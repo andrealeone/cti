@@ -170,12 +170,12 @@ describe('run', () => {
     expect(result).toBe(1)
   })
 
-  test('returns 1 for empty argv', async () => {
+  test('defaults to help for empty argv', async () => {
     const manifest: Manifest = { entries: [] }
 
     const result = await dispatch(manifest, [])
 
-    expect(result).toBe(1)
+    expect(result).toBe(0)
   })
 
   test('passes parsed flags to the command context', async () => {
@@ -420,6 +420,161 @@ describe('run', () => {
 
     expect(result).toBe(0)
     expect(runFn).toHaveBeenCalled()
+  })
+})
+
+describe('default commands', () => {
+  function baseConfig(overrides: Partial<Config> = {}): Config {
+    return { name: 'test-cli', version: '1.0.0', ...overrides }
+  }
+
+  async function captureRun(
+    config: Config,
+    argv: string[],
+  ): Promise<{ result: number; output: string[] }> {
+    const original = process.stdout.write.bind(process.stdout),
+      output: string[] = []
+
+    process.stdout.write = (chunk: string) => {
+      output.push(chunk)
+      return true
+    }
+
+    try {
+      const result = await run(config, undefined, argv)
+      return { result, output }
+    } finally {
+      process.stdout.write = original
+    }
+  }
+
+  test('help lists available commands with heading and branding', async () => {
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['hello'],
+          sourcePath: 'hello.ts',
+          importer: () => Promise.resolve({ default: { run: () => 0 } }),
+          meta: { description: 'Say hello' },
+        },
+      ],
+    }
+
+    const { result, output } = await captureRun(baseConfig({ manifest }), ['help'])
+
+    expect(result).toBe(0)
+    const text = output.join('')
+    expect(text).toContain('test-cli 1.0.0 (built with concise-ti)')
+    expect(text).toContain('hello')
+    expect(text).toContain('Say hello')
+    expect(text).toContain('help')
+    expect(text).toContain('version')
+  })
+
+  test('help --json outputs structured data', async () => {
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['hello'],
+          sourcePath: 'hello.ts',
+          importer: () => Promise.resolve({ default: { run: () => 0 } }),
+          meta: { description: 'Say hello' },
+        },
+      ],
+    }
+
+    const { output } = await captureRun(baseConfig({ manifest }), ['help', '--json'])
+
+    const parsed = JSON.parse(output.join('')) as {
+      name: string
+      version: string
+      commands: { route: string }[]
+    }
+
+    expect(parsed.name).toBe('test-cli')
+    expect(parsed.version).toBe('1.0.0')
+    expect(parsed.commands.map((c) => c.route)).toContain('hello')
+  })
+
+  test('help omits hidden commands', async () => {
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['secret'],
+          sourcePath: 'secret.ts',
+          importer: () => Promise.resolve({ default: { run: () => 0 } }),
+          meta: { hidden: true },
+        },
+      ],
+    }
+
+    const { output } = await captureRun(baseConfig({ manifest }), ['help'])
+
+    expect(output.join('')).not.toContain('secret')
+  })
+
+  test('version prints the heading', async () => {
+    const manifest: Manifest = { entries: [] }
+
+    const { result, output } = await captureRun(baseConfig({ manifest }), ['version'])
+
+    expect(result).toBe(0)
+    expect(output.join('').trim()).toBe('test-cli 1.0.0 (built with concise-ti)')
+  })
+
+  test('empty argv dispatches to help', async () => {
+    const manifest: Manifest = { entries: [] }
+
+    const { result, output } = await captureRun(baseConfig({ manifest }), [])
+
+    expect(result).toBe(0)
+    expect(output.join('')).toContain('built with concise-ti')
+  })
+
+  test('a manifest-defined help/version overrides the default', async () => {
+    const customHelp = mock(() => 0)
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['help'],
+          sourcePath: 'help.ts',
+          importer: () => Promise.resolve({ default: { run: customHelp } }),
+        },
+      ],
+    }
+
+    const result = await run({ ...baseConfig(), manifest }, undefined, ['help'])
+
+    expect(result).toBe(0)
+    expect(customHelp).toHaveBeenCalled()
+  })
+
+  test('config.skip removes a default command entirely', async () => {
+    const manifest: Manifest = { entries: [] }
+
+    const result = await run({ ...baseConfig(), manifest, skip: ['help'] }, undefined, ['help'])
+
+    expect(result).toBe(1)
+  })
+
+  test('config.skip removes a user-defined command entirely', async () => {
+    const customFn = mock(() => 0)
+    const manifest: Manifest = {
+      entries: [
+        {
+          route: ['dangerous'],
+          sourcePath: 'dangerous.ts',
+          importer: () => Promise.resolve({ default: { run: customFn } }),
+        },
+      ],
+    }
+
+    const result = await run({ ...baseConfig(), manifest, skip: ['dangerous'] }, undefined, [
+      'dangerous',
+    ])
+
+    expect(result).toBe(1)
+    expect(customFn).not.toHaveBeenCalled()
   })
 })
 

@@ -63,9 +63,9 @@ describe('command dispatch', () => {
     expect(exitCode).toBe(1)
   })
 
-  test('exits non-zero when no arguments provided', async () => {
-    const { stderr, exitCode } = await runCli([])
-    expect(stderr.includes('Unknown command')).toBe(true)
-    expect(exitCode).toBe(1)
+  test('defaults to help when no arguments are provided', async () => {
+    const { stdout, exitCode } = await runCli([])
+    expect(stdout.includes('built with concise-ti')).toBe(true)
+    expect(exitCode).toBe(0)
   })
 })
