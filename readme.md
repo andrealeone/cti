@@ -1,4 +1,4 @@
-<h1 align="center">concise-ti</h1>
+<h1 align="center">concise-τι</h1>
 
 **Concise Terminal Interface** is a lightweight, dependency-free, Bun-native TypeScript framework for building command-line tools. Install it as a dependency, call it once from your entrypoint, and start writing command files. The tool automatically discovers them, parses their arguments, routes to them, and renders their output.
 
@@ -45,6 +45,18 @@ There are no configuration files and no wiring code to handle. The framework han
 ## Getting Started
 
 Requires [Bun](https://bun.sh) 1.3 or later.
+
+The fastest way to start is the CLI's own init wizard, which scaffolds a
+working project (either a new folder or right into the one you're in) and
+asks whether you want auto-discovered commands or a single-file manifest:
+
+```bash
+bunx concise-ti init
+```
+
+See [The `concise-ti` CLI](docs/features/cli.md) for what it does and
+[Project Init](docs/guides/cli/project-init.md) for the full walkthrough. Or
+set it up by hand:
 
 ```bash
 mkdir new-cli && cd new-cli
@@ -103,11 +115,14 @@ void run({ name: 'new-cli', version: '1.0.0' }, import.meta)
 That's the whole entrypoint, and it's the last time you'll edit it. concise-ti automatically
 discovers commands from the `commands` directory, turns `fib.ts` into the `fib` route,
 parses argv against its declared flags, and dispatches automatically on every run.
-Add a second file and `app second-command` exists with no further wiring. See
+Add a second file and `app second-command` exists with no further wiring —
+`bunx concise-ti scaffold` will even ask what the command should look like
+and write that file for you. See
 [Command Routing](docs/features/command-routing.md) for how the file
-structure maps to commands. Prefer to list commands by hand instead of
-relying on the filesystem? See [Manifest](docs/features/manifest.md) for the
-inline `defineManifest` alternative.
+structure maps to commands, and [Scaffolding Commands](docs/guides/cli/scaffolding-commands.md)
+for the wizard. Prefer to list commands by hand instead of relying on the
+filesystem? See [Manifest](docs/features/manifest.md) for the inline
+`defineManifest` alternative.
 
 <br/>
 
@@ -141,6 +156,7 @@ The example above is just a taste. Full docs live in [`/docs`](docs); pick the
 one below based on what you're trying to do:
 
 - **Get a working CLI in two minutes** — [Quick Start](docs/getting-started/quickstart.md)
+- **Bootstrap or grow a project without hand-writing boilerplate** — [The `concise-ti` CLI](docs/features/cli.md): [Project Init](docs/guides/cli/project-init.md) and [Scaffolding Commands](docs/guides/cli/scaffolding-commands.md)
 - **Understand the mental model** — [Core Concepts](docs/concepts/core-concepts.md)
 - **Write commands well** — [Building Commands](docs/guides/building-commands.md), [Examples](docs/guides/examples.md), [Demos](docs/guides/demos.md)
 - **Look up a flag/routing/I/O detail** — [Features](docs/features/), one page per capability

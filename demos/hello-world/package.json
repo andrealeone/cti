@@ -1,7 +1,7 @@
 {
   "name": "concise-ti-demo-hello-world",
   "version": "1.0.0",
-  "description": "Simple greeting CLI built with concise-ti",
+  "description": "Simple greeting CLI built with concise-ti, using command auto-discovery",
   "keywords": [
     "concise-ti",
     "demo",
@@ -10,6 +10,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run ./main.ts",
-    "build": "bun build ./main.ts --compile --outfile dist/hello"
+    "cli": "bun run ./main.ts",
+    "build": "bun ../../bin/cli.ts compile ./main.ts --outfile dist/hello"
   }
 }

@@ -47,3 +47,7 @@ run(ctx) {
 Today this always skips the deploy (confirm resolves to `false`); once prompts
 are implemented, the same code starts asking the user for real, with no
 rewrite needed.
+
+## See also
+
+- [The `concise-ti` CLI](cli.md): `concise-ti init`/`scaffold` need _real_ interactive input today, so they're built on their own separate prompt helper rather than this stub

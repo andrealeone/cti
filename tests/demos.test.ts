@@ -68,6 +68,26 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
       stdout: [/\(built with concise-ti\)/, /Commands:/],
     },
   ],
+  'hello-world-with-manifest': [
+    { name: 'greets a named person', args: ['hello', 'Alice'], stdout: ['Hello, Alice!'] },
+    { name: 'defaults to World', args: ['hello'], stdout: ['Hello, World!'] },
+    { name: 'says goodbye', args: ['goodbye', 'Bob'], stdout: ['Goodbye, Bob!'] },
+    {
+      name: 'default help command lists commands with branding',
+      args: ['help'],
+      stdout: [/hello \d.*\(built with concise-ti\)/, /hello\s+Greet someone/, /goodbye/],
+    },
+    {
+      name: 'default version command prints the heading',
+      args: ['version'],
+      stdout: [/hello \d.*\(built with concise-ti\)/],
+    },
+    {
+      name: 'no arguments defaults to help',
+      args: [],
+      stdout: [/\(built with concise-ti\)/, /Commands:/],
+    },
+  ],
   'todo-app': [
     {
       name: 'adds an item',

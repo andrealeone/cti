@@ -22,11 +22,13 @@ bun run ./demos/api-client/main.ts users get 2
 echo '{"name":"Alice"}' | bun run ./demos/data-transform/main.ts format json
 ```
 
-Or compile any demo to a standalone binary:
+Or compile any demo to a standalone binary. Discovery-based demos (like
+`hello-world`) need `concise-ti compile`; manifest-based demos (like
+`hello-world-with-manifest`) can use plain `bun build --compile`:
 
 ```bash
 cd demos/hello-world
-bun build ./main.ts --compile --outfile dist/hello && ./dist/hello hello Bob
+bun ../../bin/cli.ts compile ./main.ts --outfile dist/hello && ./dist/hello hello Bob
 ```
 
 ### How they stay correct

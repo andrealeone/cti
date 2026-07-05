@@ -52,15 +52,16 @@ The `Context` passed to every command exposes:
 
 ## Demos
 
-| Demo             | Demonstrates                                                                                                                                                                                                             | Pattern              |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
-| `hello-world`    | Minimal command + dispatcher, **default `help`/`version` commands**                                                                                                                                                      | Inline manifest      |
-| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner, **`config.skip`** (env-gated `rollback`)                        | Inline manifest      |
-| `project-init`   | Flags + filesystem scaffolding from `ctx.cwd`                                                                                                                                                                            | Inline manifest      |
-| `api-client`     | Nested routes (`users/list`), **`index.ts` route collapsing**, env-driven config, **custom `ctx.config` fields via `run<ConfigType>()`**, **explicit `command<F, C>()` generics**, `args[]` specs, **command discovery** | File-based discovery |
-| `todo-app`       | Multiple commands, positionals, **`args[]` specs**, **`meta.aliases`/`meta.hidden`**, persisted state, **command discovery**                                                                                             | File-based discovery |
-| `data-transform` | Reading stdin, format conversion (json/csv/table), **command discovery**                                                                                                                                                 | File-based discovery |
-| `interactive-io` | **Logger**, **prompt/confirm/select**, spinners, colors, **stdin**, **`ctx.io.isTTY` detection**                                                                                                                         | File-based discovery |
+| Demo                        | Demonstrates                                                                                                                                                                                                             | Pattern              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
+| `hello-world`               | Minimal command + dispatcher, **default `help`/`version` commands**, **command discovery**                                                                                                                               | File-based discovery |
+| `hello-world-with-manifest` | The same two commands as `hello-world`, wired inline instead                                                                                                                                                             | Inline manifest      |
+| `deploy-tool`               | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner, **`config.skip`** (env-gated `rollback`)                        | Inline manifest      |
+| `project-init`              | Flags + filesystem scaffolding from `ctx.cwd` (a demo _about_ scaffolding, unrelated to `concise-ti init` — see [docs/features/cli.md](../docs/features/cli.md))                                                         | Inline manifest      |
+| `api-client`                | Nested routes (`users/list`), **`index.ts` route collapsing**, env-driven config, **custom `ctx.config` fields via `run<ConfigType>()`**, **explicit `command<F, C>()` generics**, `args[]` specs, **command discovery** | File-based discovery |
+| `todo-app`                  | Multiple commands, positionals, **`args[]` specs**, **`meta.aliases`/`meta.hidden`**, persisted state, **command discovery**                                                                                             | File-based discovery |
+| `data-transform`            | Reading stdin, format conversion (json/csv/table), **command discovery**                                                                                                                                                 | File-based discovery |
+| `interactive-io`            | **Logger**, **prompt/confirm/select**, spinners, colors, **stdin**, **`ctx.io.isTTY` detection**                                                                                                                         | File-based discovery |
 
 ## Running a demo
 
@@ -75,10 +76,16 @@ bun run ./demos/api-client/main.ts users get 2
 echo '{"name":"Alice"}' | bun run ./demos/data-transform/main.ts format json
 ```
 
-Build a standalone binary for any demo:
+Build a standalone binary for any demo. A discovery-based demo (like `hello-world`)
+needs `concise-ti compile` so its `commands/` directory survives inside the binary;
+a manifest-based demo (like `hello-world-with-manifest`) can use plain `bun build --compile`:
 
 ```bash
 cd demos/hello-world
+bun ../../bin/cli.ts compile ./main.ts --outfile dist/hello
+./dist/hello hello Bob
+
+cd demos/hello-world-with-manifest
 bun build ./main.ts --compile --outfile dist/hello
 ./dist/hello hello Bob
 ```
@@ -162,14 +169,14 @@ Create `demos/<name>/main.ts` and add an `EXPECTATIONS` entry in
 `tests/demos.test.ts`; the harness fails if a demo has no expectations.
 
 For a discovery-based demo with multiple commands, create files in `commands/` (see
-`api-client`, `data-transform`, `todo-app`, or `interactive-io` for examples).
+`hello-world`, `api-client`, `data-transform`, `todo-app`, or `interactive-io` for examples).
 
 ## Feature Showcase
 
 **Core concise-ti features demonstrated across demos:**
 
 - **CommandModule**: `hello-world`, all demos
-- **Default `help`/`version` commands**: `hello-world`
+- **Default `help`/`version` commands**: `hello-world`, `hello-world-with-manifest`
 - **`config.skip`**: `deploy-tool` (env-gated `rollback`)
 - **Nested routes**: `api-client` (users/list, posts/list)
 - **`index.ts` route collapsing**: `api-client` (`commands/posts/index.ts` → `posts`)
@@ -190,4 +197,4 @@ For a discovery-based demo with multiple commands, create files in `commands/` (
 - **IO spinner**: `deploy-tool`, `interactive-io`
 - **IO prompt/confirm/select**: `interactive-io`
 - **Logger**: `interactive-io`
-- **Command discovery**: `api-client`, `todo-app`, `data-transform`, `interactive-io`
+- **Command discovery**: `hello-world`, `api-client`, `todo-app`, `data-transform`, `interactive-io`

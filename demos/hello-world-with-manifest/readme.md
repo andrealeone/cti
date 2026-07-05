@@ -1,9 +1,9 @@
-# Hello World Demo
+# Hello World (with Manifest) Demo
 
 The smallest possible concise-ti CLI: two commands, no flags, no I/O beyond stdout.
-Commands are auto-discovered from `commands/*.ts`; see
-[`hello-world-with-manifest`](../hello-world-with-manifest) for the same two commands
-wired through an inline `defineManifest` instead.
+This variant wires its commands through an inline `defineManifest` call instead of a
+`commands/` directory; see [`hello-world`](../hello-world) for the auto-discovery
+equivalent of the same two commands.
 
 ## Commands
 
@@ -25,5 +25,5 @@ bun run ./main.ts goodbye Alice
 
 ## Key Patterns
 
-1. **Discovery-based manifest**: commands are loaded from `commands/*.ts` via `run(config, import.meta)`, no manifest literal to maintain
+1. **Inline manifest**: commands are defined in `main.ts` and wired via `defineManifest`, no `commands/` directory needed
 2. **Positional arguments**: `ctx.positionals[0]` reads the first positional with a fallback default

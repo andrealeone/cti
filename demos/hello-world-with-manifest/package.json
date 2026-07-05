@@ -1,0 +1,15 @@
+{
+  "name": "concise-ti-demo-hello-world-with-manifest",
+  "version": "1.0.0",
+  "description": "Simple greeting CLI built with concise-ti, using a single-file manifest",
+  "keywords": [
+    "concise-ti",
+    "demo",
+    "cli"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "bun run ./main.ts",
+    "build": "bun build ./main.ts --compile --outfile dist/hello"
+  }
+}
