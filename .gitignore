@@ -8,5 +8,6 @@ dist
 node_modules
 
 demos/**/bun.lock
+demos/**/*.log
 
 .DS_Store
