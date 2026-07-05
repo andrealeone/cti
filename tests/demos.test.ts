@@ -4,17 +4,17 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
 /**
- * DEMO VALIDATION — one generic harness for every demo under /demos.
+ * DEMO VALIDATION: one generic harness for every demo under /demos.
  * ==================================================================
  *
  * Strategy (and why):
- *   We validate each demo as a BLACK BOX — spawn its CLI exactly as a user would
- *   (`bun run <demo>/main.ts <args>`), feed stdin/env, then assert on exit
+ *   We validate each demo as a BLACK BOX. We spawn its CLI exactly as a user
+ *   would (`bun run <demo>/main.ts <args>`), feed stdin/env, then assert on exit
  *   code + key output fragments. We do NOT assert byte-for-byte transcripts.
  *
  * Why not hard-code full expected output inline?
- *   Full-string equality is brittle: it breaks on ANSI colour, spinner frames,
- *   trailing whitespace, and harmless wording tweaks — producing failures that
+ *   Full-string equality is brittle: it breaks on ANSI color, spinner frames,
+ *   trailing whitespace, and harmless wording tweaks, producing failures that
  *   signal nothing about whether the demo actually works.
  *
  * Why not Bun snapshots (`toMatchSnapshot`)?
@@ -122,7 +122,7 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
   ],
   'interactive-io': [
     {
-      name: 'views a user profile with colours and logging',
+      name: 'views a user profile with colors and logging',
       args: ['view', 'test-user'],
       isolateHome: true,
       exit: 1,
@@ -153,7 +153,7 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
       stderr: [/Error parsing JSON/],
     },
     {
-      name: 'lists all profiles with colours',
+      name: 'lists all profiles with colors',
       args: ['list'],
       isolateHome: true,
       stdout: [/No profiles found/],
@@ -175,7 +175,7 @@ const demos = discoverDemos()
 
 async function runCase(demo: string, c: DemoCase) {
   const cli = join(DEMOS_DIR, demo, 'main.ts')
-  // NO_COLOR keeps output stable and colour-free for assertions.
+  // NO_COLOR keeps output stable and color-free for assertions.
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
     NO_COLOR: '1',
