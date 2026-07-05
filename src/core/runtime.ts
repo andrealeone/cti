@@ -44,9 +44,13 @@ export function defineManifest(routes: Record<string, CommandModule>): Manifest 
  * favor of writing the resolved manifest to that path as JSON. `concise-ti
  * compile` sets this to read a `commandsDir` CLI's manifest ahead of time,
  * without requiring entrypoints to change how they call `run()`.
+ *
+ * `ConfigType` lets a CLI with its own `Config` fields (see `demos/api-client`)
+ * call `run<MyConfig>(config, import.meta)`; commands then declare
+ * `command<Flags, MyConfig>()` to get a typed `ctx.config` with no cast.
  */
-export async function run(
-  config: Config,
+export async function run<ConfigType extends Config = Config>(
+  config: ConfigType,
   importMeta?: { dir: string },
   argv?: string[],
 ): Promise<number> {
