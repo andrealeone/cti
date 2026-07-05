@@ -244,6 +244,8 @@ function buildHelpCommand(entries: ManifestEntry[], entryRoute: string): Command
         lines.push(description ? `  ${route.padEnd(width + 2)}${description}` : `  ${route}`)
       }
 
+      lines.push('')
+
       if (entryRoute !== 'help') lines.push('', `Running with no arguments invokes: ${entryRoute}`)
 
       ctx.io.write(lines.join('\n'))
