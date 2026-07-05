@@ -10,6 +10,6 @@
   "type": "module",
   "scripts": {
     "dev": "bun run ./main.ts",
-    "build": "bun build ./main.ts --compile --outfile dist/transform"
+    "build": "bun ../../bin/cli.ts compile ./main.ts --outfile dist/transform"
   }
 }

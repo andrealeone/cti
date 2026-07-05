@@ -9,6 +9,7 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "bun run ./main.ts"
+    "dev": "bun run ./main.ts",
+    "build": "bun ../../bin/cli.ts compile ./main.ts --outfile dist/profiles"
   }
 }
