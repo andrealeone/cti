@@ -1,6 +1,11 @@
 ---
 name: start-building-with-cti
-description: Use when writing or scaffolding a brand-new CLI built on CTI (the Bun-native TypeScript CLI framework): creating command files, wiring up an entrypoint with defineManifest/discoverManifest, declaring flags/positionals, structuring a commands directory, using ctx.io (color, spinner, prompt, confirm, select), or following CTI's conventions for testing and error handling. Triggers on phrases like "set up a CTI project", "add a command to this CTI CLI", "how do I declare a flag in CTI", "structure this CLI with CTI". For turning an existing non-CTI CLI into a CTI one, use migrate-to-cti instead. Not for explaining what CTI is or pitching it; use about-cti for that.
+description: >-
+  Use when scaffolding a brand-new CLI on CTI, the Bun-native TypeScript CLI framework
+  — command files, entrypoint wiring (defineManifest/discoverManifest), flags/positionals,
+  commands directory structure, ctx.io (color, spinner, prompt, confirm, select), and
+  CTI's testing/error-handling conventions. For porting an existing CLI, use migrate-to-cti
+  instead. Not for explaining or pitching CTI; use about-cti for that.
 ---
 
 # Starting a CLI with CTI

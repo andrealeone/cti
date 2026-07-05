@@ -1,6 +1,13 @@
 ---
 name: migrate-to-cti
-description: Use when porting an existing CLI (built with Yargs, Commander.js, Oclif, argparse/click, a hand-rolled argv parser, a shell script, or anything else) onto CTI (the Bun-native TypeScript CLI framework). Covers reading an existing CLI's command/subcommand structure, mapping its flags and positionals onto CTI's FlagSpec/ArgSpec, converting handler logic into CommandModule.run(ctx), replacing bespoke output/prompt/color code with ctx.io, and running the old and new CLI side by side during the cutover. Not for scaffolding a brand-new CTI project with no prior implementation; use start-building-with-cti for that. Not for explaining what CTI is or pitching it; use about-cti for that.
+description: >-
+  Use when porting an existing CLI (Yargs, Commander.js, Oclif, argparse/click, a
+  hand-rolled argv parser, a shell script, etc.) onto CTI, the Bun-native TypeScript
+  CLI framework — mapping its command/subcommand structure, flags, and positionals
+  onto CTI's FlagSpec/ArgSpec, converting handlers into CommandModule.run(ctx),
+  replacing bespoke output/prompt/color code with ctx.io, and cutting over safely.
+  Not for scaffolding a brand-new CTI project; use start-building-with-cti for that.
+  Not for explaining or pitching CTI; use about-cti for that.
 ---
 
 # Migrating an existing CLI to CTI
