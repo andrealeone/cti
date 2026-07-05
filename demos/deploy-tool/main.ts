@@ -1,20 +1,40 @@
 import { command, defineManifest, run } from 'cti'
 
+const ENVIRONMENTS = ['staging', 'production'] as const
+
 const deploy = command({
   meta: { description: 'Deploy application to an environment' },
   flags: {
-    env: { type: 'string', default: 'staging', description: 'Target environment' },
+    env: {
+      type: 'string',
+      default: 'staging',
+      description: 'Target environment',
+      choices: ENVIRONMENTS,
+    },
     verbose: { type: 'boolean', short: 'v', description: 'Print each step' },
+    region: {
+      type: 'string',
+      short: 'r',
+      multiple: true,
+      description: 'Region(s) to deploy to (repeatable)',
+    },
   },
   run(ctx) {
     const env = ctx.flags.env as string
     const verbose = ctx.flags.verbose === true
+    const regions = (ctx.flags.region as string[] | undefined) ?? ['us-east-1']
 
-    const spinner = ctx.io.spinner(`Deploying to ${env}`)
+    // `choices` isn't enforced by the parser yet, so the handler validates.
+    if (!ENVIRONMENTS.includes(env as (typeof ENVIRONMENTS)[number])) {
+      ctx.io.writeError(`Invalid environment "${env}". Choose one of: ${ENVIRONMENTS.join(', ')}`)
+      return 1
+    }
+
+    const spinner = ctx.io.spinner(`Deploying to ${env} (${regions.join(', ')})`)
     if (verbose) {
       ctx.io.write('  • Building artifacts')
       ctx.io.write('  • Running tests')
-      ctx.io.write('  • Uploading to server')
+      for (const region of regions) ctx.io.write(`  • Uploading to ${region}`)
     }
     spinner.succeed()
     ctx.io.write(ctx.io.color(`✓ Deployment to ${env} successful!`, 'green'))
@@ -54,4 +74,9 @@ const status = command({
   },
 })
 
-void run({ name: 'deploy-tool', bin: 'deploy', version: '1.0.0', manifest: defineManifest({ deploy, rollback, status }) })
+void run({
+  name: 'deploy-tool',
+  bin: 'deploy',
+  version: '1.0.0',
+  manifest: defineManifest({ deploy, rollback, status }),
+})

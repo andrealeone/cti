@@ -14,10 +14,10 @@ export const DATA = {
   ],
 }
 
-export function baseUrl(ctx: Context): string {
+export function baseUrl<F>(ctx: Context<F>): string {
   return ctx.env.API_URL ?? 'https://api.example.com'
 }
 
-export function emit(ctx: Context, data: unknown): void {
+export function emit<F>(ctx: Context<F>, data: unknown): void {
   ctx.io.write(JSON.stringify(data, null, 2))
 }

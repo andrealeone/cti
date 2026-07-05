@@ -2,7 +2,8 @@ import { command } from 'cti'
 import { mutateById } from '../state'
 
 export default command({
-  meta: { description: 'Delete a TODO item' },
+  meta: { description: 'Delete a TODO item', aliases: ['rm'] },
+  args: [{ name: 'id', description: 'TODO id', required: true }],
   run(ctx) {
     return mutateById(ctx, (todos, id) => {
       const index = todos.findIndex((t) => t.id === id)

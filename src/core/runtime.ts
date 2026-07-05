@@ -118,7 +118,7 @@ async function dispatch(
         positionals: parsed.positionals,
         route: entry.route,
         cwd: process.cwd(),
-        env: process.env as Record<string, string | undefined>,
+        env: process.env,
         config,
         io,
         logger,

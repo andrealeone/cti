@@ -14,6 +14,16 @@ export default command({
       return 0
     }
 
+    // Piped output (isTTY === false) skips decoration in favor of a stable,
+    // scriptable format: one profile per line, tab-separated.
+    if (!ctx.io.isTTY) {
+      for (const profile of profiles) {
+        ctx.io.write(`${profile.id}\t${profile.name}\t${profile.email}\t${profile.role}`)
+      }
+      ctx.logger.info(`Listed ${profiles.length} profiles`)
+      return 0
+    }
+
     ctx.io.write('')
     ctx.io.write(ctx.io.color('User Profiles', 'cyan'))
     ctx.io.write(ctx.io.color('═'.repeat(80), 'gray'))

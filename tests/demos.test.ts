@@ -86,15 +86,41 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
       args: ['status', '--env', 'production'],
       stdout: [/production/, /Healthy/],
     },
+    {
+      name: 'deploys to repeated --region flags',
+      args: ['deploy', '--env', 'production', '--verbose', '--region', 'a', '--region', 'b'],
+      stdout: [/Uploading to a/, /Uploading to b/],
+    },
+    {
+      name: 'rejects an environment outside --env choices',
+      args: ['deploy', '--env', 'bogus'],
+      exit: 1,
+      stderr: [/Invalid environment/],
+    },
   ],
   'api-client': [
     { name: 'lists users', args: ['users', 'list'], stdout: [/Alice/, /Bob/] },
     { name: 'gets a post', args: ['posts', 'get', '1'], stdout: [/Getting Started with CTI/] },
     {
+      name: 'limits a post listing via a typed flag',
+      args: ['posts', 'list', '--limit', '1'],
+      stdout: [/Getting Started with CTI/],
+    },
+    {
+      name: 'collapses posts/index.ts into the posts route',
+      args: ['posts'],
+      stdout: [/post\(s\) available/],
+    },
+    {
       name: 'shows config from env',
       args: ['config'],
       env: { API_URL: 'https://test.local' },
       stdout: [/test\.local/],
+    },
+    {
+      name: 'reads a custom Config field',
+      args: ['config'],
+      stdout: [/Version:\s+v2/],
     },
   ],
   'project-init': [
@@ -230,3 +256,29 @@ for (const demo of demos) {
     }
   })
 }
+
+describe('demo: interactive-io (isTTY detection)', () => {
+  test('list uses a plain tab-separated format when stdout is piped', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'cti-demo-interactive-io-'))
+    const shared = { isolateHome: false as const, env: { HOME: home } }
+
+    const seeded = await runCase('interactive-io', {
+      name: 'seed',
+      args: ['import'],
+      stdin: '[{"name":"Alice","email":"alice@example.com","role":"admin"}]',
+      ...shared,
+    })
+    expect(seeded.exitCode).toBe(0)
+
+    const { stdout, exitCode } = await runCase('interactive-io', {
+      name: 'list',
+      args: ['list'],
+      ...shared,
+    })
+    expect(exitCode).toBe(0)
+    // Piped (non-TTY) output: id, name, email, role joined with tabs, no
+    // color codes or box-drawing separators.
+    expect(stdout).toMatch(/\talice@example\.com\tadmin/)
+    expect(stdout).not.toContain('═')
+  })
+})

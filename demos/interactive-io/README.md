@@ -41,6 +41,13 @@ A user profile manager CLI that showcases CTI's interactive and logging features
 - Read JSON profiles from stdin
 - Import multiple profiles at once
 
+### 8. **TTY Detection** (`ctx.io.isTTY`)
+
+- `list` renders a colored, boxed table when stdout is a real terminal
+- The same command switches to a plain tab-separated line per profile when
+  stdout is piped (`bun run ./main.ts list | cat`), so scripts get a stable
+  format without parsing ANSI codes or padding
+
 ## Commands
 
 ### `view <user-id>`

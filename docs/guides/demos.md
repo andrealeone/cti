@@ -1,10 +1,14 @@
 ## Demos
 
 The [`/demos`](../../demos) folder holds small, self-contained example CLIs
-built with CTI, each one a single readable file you can run, read, copy, and
-adapt. They cover both onboarding patterns (`defineManifest` for a handful of
-inline commands, `discoverManifest`/filesystem discovery for many) and every
-`ctx.io` primitive.
+built with CTI, each one a single readable file (or a small `commands/` tree)
+you can run, read, copy, and adapt. They cover both onboarding patterns
+(`defineManifest` for a handful of inline commands, `discoverManifest`/filesystem
+discovery for many, including `index.ts` route collapsing) and every `ctx.io`
+primitive, including TTY-aware output. Between them, the demos also exercise
+repeatable (`multiple: true`) flags, in-handler `choices` validation, `args[]`
+specs, `meta.aliases`/`meta.hidden`, explicit `command<F>()` generics, and
+custom `ctx.config` fields.
 
 The full demo list, what each one demonstrates, and the exact commands to run
 them live in the demos folder's own **[README](../../demos/readme.md)**. That's

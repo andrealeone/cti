@@ -50,12 +50,12 @@ The `Context` passed to every command exposes:
 | Demo             | Demonstrates                                                             | Pattern              |
 | ---------------- | ------------------------------------------------------------------------ | -------------------- |
 | `hello-world`    | Minimal command + dispatcher                                             | Inline manifest      |
-| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), color, spinner           | Inline manifest      |
+| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner | Inline manifest      |
 | `project-init`   | Flags + filesystem scaffolding from `ctx.cwd`                            | Inline manifest      |
-| `api-client`     | Nested routes (`users/list`), env-driven config, **command discovery**   | File-based discovery |
-| `todo-app`       | Multiple commands, positionals, persisted state, **command discovery**   | File-based discovery |
+| `api-client`     | Nested routes (`users/list`), **`index.ts` route collapsing**, env-driven config, **custom `ctx.config` fields**, **explicit `command<F>()` generics**, `args[]` specs, **command discovery** | File-based discovery |
+| `todo-app`       | Multiple commands, positionals, **`args[]` specs**, **`meta.aliases`/`meta.hidden`**, persisted state, **command discovery** | File-based discovery |
 | `data-transform` | Reading stdin, format conversion (json/csv/table), **command discovery** | File-based discovery |
-| `interactive-io` | **Logger**, **prompt/confirm/select**, spinners, colors, **stdin**      | File-based discovery |
+| `interactive-io` | **Logger**, **prompt/confirm/select**, spinners, colors, **stdin**, **`ctx.io.isTTY` detection** | File-based discovery |
 
 ## Running a demo
 
@@ -90,13 +90,28 @@ bun run ./demos/todo-app/main.ts complete 1
 bun run ./demos/deploy-tool/main.ts rollback --env staging          # exits 1: asks for --force
 bun run ./demos/deploy-tool/main.ts rollback --env staging --force  # proceeds
 
-# api-client: configuration comes from the environment
+# deploy-tool: --region is repeatable (multiple: true), --env is validated in the handler
+bun run ./demos/deploy-tool/main.ts deploy --env production --region us-east-1 --region eu-west-1
+bun run ./demos/deploy-tool/main.ts deploy --env bogus              # exits 1: not in --env's choices
+
+# api-client: configuration comes from the environment and from ctx.config
 API_URL=https://api.mysite.com bun run ./demos/api-client/main.ts config
+
+# api-client: commands/posts/index.ts collapses into the bare `posts` route
+bun run ./demos/api-client/main.ts posts
+bun run ./demos/api-client/main.ts posts list --limit 1
+
+# todo-app: meta.aliases and args[] specs live on complete/delete
+bun run ./demos/todo-app/main.ts complete 1
+bun run ./demos/todo-app/main.ts delete 1
 
 # interactive-io: logger, prompts, and colors
 bun run ./demos/interactive-io/main.ts list
 echo '[{"id":"1","name":"Alice","email":"alice@example.com","role":"admin"}]' | bun run ./demos/interactive-io/main.ts import
 bun run ./demos/interactive-io/main.ts view 1
+
+# interactive-io: list adapts to ctx.io.isTTY (colored table vs. tab-separated when piped)
+bun run ./demos/interactive-io/main.ts list | cat
 ```
 
 ## Validation
@@ -125,7 +140,8 @@ const manifest = await discoverManifest(commandsDir)
 
 With discovery, each command lives in its own `.ts` file under `commands/`, and the
 router automatically discovers them. File structure mirrors routes: `commands/users/list.ts`
-becomes the `users/list` command.
+becomes the `users/list` command. `index.ts` collapses into its parent directory's route:
+`commands/posts/index.ts` becomes `posts`, not `posts index` (see `api-client`).
 
 ## Adding a Demo
 
@@ -141,12 +157,20 @@ For a discovery-based demo with multiple commands, create files in `commands/` (
 
 - **CommandModule**: `hello-world`, all demos
 - **Nested routes**: `api-client` (users/list, posts/list)
+- **`index.ts` route collapsing**: `api-client` (`commands/posts/index.ts` → `posts`)
 - **Typed flags**: `deploy-tool`, `project-init`, `data-transform`
+- **Repeatable flags** (`multiple: true`): `deploy-tool` (`--region`)
+- **In-handler `choices` validation**: `deploy-tool` (`--env`)
+- **Explicit `command<F>()` generics**: `api-client` (`posts list`)
 - **Positionals & args**: `todo-app`, `api-client`, `data-transform`
+- **`args[]` specs**: `todo-app` (complete/delete), `api-client` (users/get, posts/get)
+- **`meta.aliases` / `meta.hidden`**: `todo-app` (delete/clear)
+- **Custom `ctx.config` fields**: `api-client` (`config`)
 - **Exit codes**: `todo-app`, `deploy-tool`, `data-transform`
 - **Environment variables**: `api-client`, `interactive-io`
 - **Filesystem access**: `project-init`, `todo-app`, `interactive-io`
 - **Stdin/stdout**: `data-transform`, `interactive-io`
+- **TTY detection** (`ctx.io.isTTY`): `interactive-io` (`list`)
 - **IO colors**: `deploy-tool`, `interactive-io`
 - **IO spinner**: `deploy-tool`, `interactive-io`
 - **IO prompt/confirm/select**: `interactive-io`

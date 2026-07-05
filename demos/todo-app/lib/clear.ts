@@ -2,7 +2,9 @@ import { command } from 'cti'
 import { loadTodos, saveTodos } from '../state'
 
 export default command({
-  meta: { description: 'Delete all completed TODOs' },
+  // hidden: true keeps a maintenance command out of future generated help
+  // output without removing it from routing.
+  meta: { description: 'Delete all completed TODOs', hidden: true },
   run(ctx) {
     const todos = loadTodos()
     const remaining = todos.filter((t) => !t.completed)

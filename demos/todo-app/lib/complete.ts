@@ -3,6 +3,7 @@ import { mutateById } from '../state'
 
 export default command({
   meta: { description: 'Mark a TODO as complete' },
+  args: [{ name: 'id', description: 'TODO id', required: true }],
   run(ctx) {
     return mutateById(ctx, (todos, id) => {
       const todo = todos.find((t) => t.id === id)
