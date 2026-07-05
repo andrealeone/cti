@@ -55,6 +55,7 @@ bun run ./main.ts users get 2
 ## Key Patterns
 
 1. **Extended `Config`**: `ApiClientConfig` adds an `apiVersion` field alongside the fields concise-ti reads itself
-2. **Nested command directories**: `commands/posts/` and `commands/users/` become the `posts` and `users` subtrees
-3. **`index.ts` collapse**: `commands/posts/index.ts` is the `posts` command itself, not `posts index`
-4. **Typed flags**: `command<PostsListFlags>()` carries a flag shape into `ctx.flags` for the handler
+2. **Typed `ctx.config`**: `main.ts` calls `run<ApiClientConfig>(config, import.meta)`, and `commands/config.ts` declares `command<Record<string, unknown>, ApiClientConfig>()` to read `ctx.config.apiVersion` with no cast
+3. **Nested command directories**: `commands/posts/` and `commands/users/` become the `posts` and `users` subtrees
+4. **`index.ts` collapse**: `commands/posts/index.ts` is the `posts` command itself, not `posts index`
+5. **Typed flags**: `command<PostsListFlags>()` carries a flag shape into `ctx.flags` for the handler

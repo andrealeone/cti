@@ -9,4 +9,6 @@ export interface ApiClientConfig extends Config {
 
 const config: ApiClientConfig = { name: 'api-client', version: '1.0.0', apiVersion: 'v2' }
 
-void run(config, import.meta)
+// The explicit type argument carries ApiClientConfig into every command's
+// ctx.config, so handlers no longer need to cast it (see commands/config.ts).
+void run<ApiClientConfig>(config, import.meta)
