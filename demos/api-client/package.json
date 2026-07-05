@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-api-client",
+  "name": "concise-ti-demo-api-client",
   "version": "1.0.0",
-  "description": "Environment-aware API client CLI built with CTI",
+  "description": "Environment-aware API client CLI built with concise-ti",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

@@ -1,6 +1,6 @@
 ## API Reference
 
-Every type and function CTI exports, as of `src/index.ts`:
+Every type and function concise-ti exports, as of `src/index.ts`:
 
 ```typescript
 export { command } from '@/core/command'
@@ -190,7 +190,7 @@ function discoverManifest(commandsDir: string): Promise<Manifest>
 
 Walks `commandsDir`, building a route from each `.ts` file's path (skipping
 `*.test.ts`; `index.ts` collapses into its parent's route) and lazily
-importing its default export. Not exported from `cti` directly; `run()` calls
+importing its default export. Not exported from `concise-ti` directly; `run()` calls
 it for you when `config.manifest` is unset.
 
 #### `buildRouteLookup(manifest)`
@@ -303,6 +303,6 @@ import { shouldUseColor, isTTY } from '@/utils/tty'
 As a consumer, import from the package instead:
 
 ```typescript
-import { command, run } from 'cti'
-import type { Config, CommandModule } from 'cti'
+import { command, run } from 'concise-ti'
+import type { Config, CommandModule } from 'concise-ti'
 ```

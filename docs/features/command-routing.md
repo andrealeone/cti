@@ -1,6 +1,6 @@
 # Command Routing
 
-CTI routes commands from the file structure of your `commands` directory (or an
+concise-ti routes commands from the file structure of your `commands` directory (or an
 inline manifest; see [Manifest](manifest.md)). Each command file becomes a
 route; directory nesting becomes a command path.
 

@@ -29,7 +29,7 @@ const usersList: CommandModule = {
 }
 
 const config: Config = {
-  name: 'cti',
+  name: 'concise-ti',
   version: '1.0.0',
   manifest: defineManifest({
     ping,

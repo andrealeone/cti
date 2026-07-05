@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
-import type { Context } from 'cti'
+import type { Context } from 'concise-ti'
 
 export interface Todo {
   id: number
@@ -10,7 +10,7 @@ export interface Todo {
   completed: boolean
 }
 
-export const TODOS_FILE = join(homedir(), '.cti-todos.json')
+export const TODOS_FILE = join(homedir(), '.concise-ti-todos.json')
 
 export function loadTodos(): Todo[] {
   if (!existsSync(TODOS_FILE)) return []

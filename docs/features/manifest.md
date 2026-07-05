@@ -1,7 +1,7 @@
 # Manifest
 
 A **manifest** is the map from route to command module the router dispatches
-against. Every CLI has exactly one, whether you write it by hand or let CTI
+against. Every CLI has exactly one, whether you write it by hand or let concise-ti
 build it from your filesystem.
 
 ```typescript
@@ -26,8 +26,8 @@ swapping one for the other never touches your commands.
 Builds a manifest from an in-memory map of routes to command modules:
 
 ```typescript
-import { command, defineManifest, run } from 'cti'
-import type { Config } from 'cti'
+import { command, defineManifest, run } from 'concise-ti'
+import type { Config } from 'concise-ti'
 
 const hello = command({
   meta: { description: 'Greet someone' },
@@ -72,7 +72,7 @@ uses automatically when `config.manifest` is not set; you never call
 `discoverManifest` yourself in the common case:
 
 ```typescript
-import { run } from 'cti'
+import { run } from 'concise-ti'
 
 void run({ name: 'my-cli', version: '1.0.0' }, import.meta)
 ```
@@ -92,7 +92,7 @@ pays no more startup cost than one with a single command.
 
 ## No separate build step
 
-There is no `cti build` or manifest-generation step. `discoverManifest` runs
+There is no `concise-ti build` or manifest-generation step. `discoverManifest` runs
 the same `readdirSync` + dynamic `import()` walk whether the entrypoint is run
 with `bun run` or invoked from a `bun build --compile` binary; behavior is
 identical in both, because it's the same function doing the same work.

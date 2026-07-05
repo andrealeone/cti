@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { loadTodos, saveTodos } from '../state'
 
 export default command({

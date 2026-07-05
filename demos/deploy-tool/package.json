@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-deploy-tool",
+  "name": "concise-ti-demo-deploy-tool",
   "version": "1.0.0",
-  "description": "Deployment CLI with flags and output styling built with CTI",
+  "description": "Deployment CLI with flags and output styling built with concise-ti",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

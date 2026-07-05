@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-project-init",
+  "name": "concise-ti-demo-project-init",
   "version": "1.0.0",
-  "description": "Interactive project initialization CLI built with CTI",
+  "description": "Interactive project initialization CLI built with concise-ti",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

@@ -14,9 +14,9 @@ CLI applications need a runtime engineered for their constraints, not a repurpos
 
 Enter Bun. It's fast to start, runs TypeScript natively (no build step), and compiles to standalone binaries. It's everything Node.js isn't for this use case.
 
-CTI is built on Bun. But Bun alone isn't enough. You still need structure: how do you register commands? How do you parse arguments? How do you handle colors, prompts, and other CLI primitives?
+concise-ti is built on Bun. But Bun alone isn't enough. You still need structure: how do you register commands? How do you parse arguments? How do you handle colors, prompts, and other CLI primitives?
 
-CTI answers those questions with an opinionated but minimal framework. We include what CLI tools actually need-routing, parsing, I/O primitives-and nothing else. No database abstractions. No ORM. No middleware. Just command handling, done well.
+concise-ti answers those questions with an opinionated but minimal framework. We include what CLI tools actually need-routing, parsing, I/O primitives-and nothing else. No database abstractions. No ORM. No middleware. Just command handling, done well.
 
 ### What We're Building
 
@@ -40,6 +40,6 @@ Right now, most developers build CLIs with tools that weren't designed for the j
 
 We're going to remind them.
 
-CTI isn't trying to be everything to everyone. It's trying to be the best choice for building fast, tight, standalone CLI applications. Not servers. Not data pipelines. Not scientific computing. CLIs.
+concise-ti isn't trying to be everything to everyone. It's trying to be the best choice for building fast, tight, standalone CLI applications. Not servers. Not data pipelines. Not scientific computing. CLIs.
 
 Do that one thing exceptionally well, and you've built something worth using.

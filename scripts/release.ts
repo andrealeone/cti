@@ -18,11 +18,11 @@ await $`bun run check:types`
 await $`bun run lint`
 await $`bun test`
 
-const { version } = (await Bun.file('package.json').json()) as { version: string }
+const { name, version } = (await Bun.file('package.json').json()) as { name: string; version: string }
 const prerelease = version.match(/-([a-zA-Z]+)\.\d+$/)
 const tag = prerelease ? prerelease[1] : 'latest'
 
-console.log(`Publishing cti@${version} with dist-tag "${tag}"${dryRun ? ' (dry run)' : ''}`)
+console.log(`Publishing ${name}@${version} with dist-tag "${tag}"${dryRun ? ' (dry run)' : ''}`)
 await $`npm publish --tag ${tag} ${dryRun ? '--dry-run' : ''}`
 
 if (!dryRun) {

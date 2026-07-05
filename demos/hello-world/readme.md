@@ -1,6 +1,6 @@
 # Hello World Demo
 
-The smallest possible CTI CLI: two commands, no flags, no I/O beyond stdout.
+The smallest possible concise-ti CLI: two commands, no flags, no I/O beyond stdout.
 
 ## Commands
 

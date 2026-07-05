@@ -1,6 +1,6 @@
 # TTY Detection
 
-CTI checks whether stdout is connected to a terminal (interactive) or piped
+concise-ti checks whether stdout is connected to a terminal (interactive) or piped
 (to a file, another process, or a CI log) and adapts color, spinners, and
 prompts accordingly.
 

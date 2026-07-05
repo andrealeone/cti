@@ -2,21 +2,21 @@
 
 ### Explicit over implicit
 
-CTI has no hidden conventions or surprise behaviors:
+concise-ti has no hidden conventions or surprise behaviors:
 
 - Commands are files; a route is the file's path. No annotations, no decorators, no registration step.
 - Configuration is explicit: build a `Config` object, pass it to `run()`.
 - Dispatch is explicit: `run(config, import.meta)` resolves argv → command.
 
-Read CTI's code and you know what happens, with no searching for a decorator or a
+Read concise-ti's code and you know what happens, with no searching for a decorator or a
 plugin that's silently changing behavior.
 
 ### Minimalism by default
 
-CTI ships what CLI tools need and stops there. Fewer dependencies means faster
+concise-ti ships what CLI tools need and stops there. Fewer dependencies means faster
 startup; a smaller codebase means it's readable in an afternoon; fewer concepts
-means a shorter path from "installed" to "shipped." If you need something CTI
-doesn't provide, add it yourself; CTI won't bloat itself "just in case."
+means a shorter path from "installed" to "shipped." If you need something concise-ti
+doesn't provide, add it yourself; concise-ti won't bloat itself "just in case."
 
 ### Composition over configuration
 
@@ -40,27 +40,27 @@ exactly what a command needs and produces.
 
 Lazy command loading, a zero-dependency core, and Bun's native TypeScript
 support are not tuning knobs; they're the starting point. A CLI shouldn't
-notice CTI is there.
+notice concise-ti is there.
 
 ### Built for Bun, not portable everywhere
 
-CTI doesn't try to run on Node.js. That's a constraint, embraced: native
+concise-ti doesn't try to run on Node.js. That's a constraint, embraced: native
 TypeScript with no transpile step, `bun build --compile` for standalone
 binaries, and a codebase with no cross-runtime shims to maintain.
 
 ---
 
-### Where CTI differs
+### Where concise-ti differs
 
 **vs. Yargs / Commander.js**: mature, widely used, and built for Node.js
-years before Bun existed; their API surface reflects that history. CTI is
+years before Bun existed; their API surface reflects that history. concise-ti is
 Bun-native, smaller, and assumes TypeScript from the start.
 
 **vs. Oclif**: feature-rich, production-tested, designed for large CLI suites
-with a plugin architecture and class-based commands. CTI is smaller and uses
+with a plugin architecture and class-based commands. concise-ti is smaller and uses
 plain modules with a thin dispatcher instead.
 
-### What CTI isn't
+### What concise-ti isn't
 
 - **A web framework.** Use Hono, Elysia, or similar for servers.
 - **A general application framework.** It's for CLIs specifically.
@@ -69,12 +69,12 @@ plain modules with a thin dispatcher instead.
 
 ### Why choose it
 
-Choose CTI if you're building a standalone CLI tool, want fast startup and
+Choose concise-ti if you're building a standalone CLI tool, want fast startup and
 small compiled binaries, and would rather write plain TypeScript modules than
 learn a configuration format. Don't reach for it if you're building a server,
 need to target Node.js specifically, or want a batteries-included framework
 with generated help, shell completions, and plugins today; those are on the
 [Roadmap](../future/roadmap.md), not shipped yet.
 
-CTI isn't trying to be everything. It's trying to be the obvious choice for
+concise-ti isn't trying to be everything. It's trying to be the obvious choice for
 one thing: fast, small, standalone CLI applications.

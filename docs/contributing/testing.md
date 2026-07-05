@@ -1,6 +1,6 @@
 ## Testing
 
-CTI's tests live in [`/tests`](../../tests) and run on Bun's built-in test
+concise-ti's tests live in [`/tests`](../../tests) and run on Bun's built-in test
 runner, with no third-party testing dependencies.
 
 ```bash

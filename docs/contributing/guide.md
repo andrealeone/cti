@@ -1,6 +1,6 @@
 ## Contributing
 
-CTI is early: pre-1.0, still Phase 0 on the [Roadmap](../future/roadmap.md).
+concise-ti is early: pre-1.0, still Phase 0 on the [Roadmap](../future/roadmap.md).
 That means two things: contributions are genuinely welcome, and nothing about
 the API is set in stone yet, so feedback on rough edges lands while it can
 still shape the design.
@@ -43,20 +43,20 @@ bun run format        # oxfmt
 - **Documentation**: clarity, accuracy against the current source, missing examples
 - **The Phase 1 items** on the [Roadmap](../future/roadmap.md): flag validation
   enforcement, `--help`/`--version` generation, shell completions
-- **Examples**: a real CLI you built with CTI, shared as an issue or a demo
+- **Examples**: a real CLI you built with concise-ti, shared as an issue or a demo
 
 If you're picking your first contribution, low-stakes options are a docs fix,
-a new [demo](../guides/demos.md), or a bug report from actually using CTI.
+a new [demo](../guides/demos.md), or a bug report from actually using concise-ti.
 
 ### Testing your changes in another project
 
 ```bash
-bun link              # inside the cti repo
+bun link              # inside the concise-ti repo
 cd /path/to/your/project
-bun link cti          # use the local build instead of a published version
+bun link concise-ti   # use the local build instead of a published version
 ```
 
-Unlink with `bun unlink cti` and `bun install` to restore the published
+Unlink with `bun unlink concise-ti` and `bun install` to restore the published
 version when you're done.
 
 ### Reporting a bug

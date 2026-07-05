@@ -1,11 +1,11 @@
 # Flag Parsing
 
 Flags are declared as plain objects on a command's `flags` map, with no builder
-functions to import. CTI parses them with Node's `util.parseArgs` and coerces
+functions to import. concise-ti parses them with Node's `util.parseArgs` and coerces
 each value to its declared type.
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 export default command({
   flags: {

@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { baseUrl } from '../lib/utils'
 import type { ApiClientConfig } from '../main'
 

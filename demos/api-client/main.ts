@@ -1,8 +1,8 @@
-import { run } from 'cti'
-import type { Config } from 'cti'
+import { run } from 'concise-ti'
+import type { Config } from 'concise-ti'
 
 // Config isn't sealed: a real CLI can carry its own fields (a feature flag, an
-// API version, whatever commands need) alongside the fields CTI reads itself.
+// API version, whatever commands need) alongside the fields concise-ti reads itself.
 export interface ApiClientConfig extends Config {
   apiVersion: string
 }

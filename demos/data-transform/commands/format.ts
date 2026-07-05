@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { toCSV, toTable, type Row } from '../lib/formats'
 
 export default command({

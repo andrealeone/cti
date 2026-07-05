@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { DATA, emit } from '../../lib/utils'
 
 export default command({

@@ -1,6 +1,6 @@
 ## I/O System
 
-CTI's I/O module provides the terminal-interaction primitives every command
+concise-ti's I/O module provides the terminal-interaction primitives every command
 gets via `ctx.io` and `ctx.logger`: color, spinners, prompts, and logging.
 
 ### Factory pattern
@@ -102,7 +102,7 @@ isn't used to filter output.
 ANSI codes, spinners, and line-based prompts don't need a library. Keeping this
 layer dependency-free means it loads instantly and there's nothing to audit or
 version. If you need a full terminal UI (tables, layouts, rich components), pull
-in a library alongside CTI; nothing here prevents that.
+in a library alongside concise-ti; nothing here prevents that.
 
 ### Related
 

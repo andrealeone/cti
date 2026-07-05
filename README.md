@@ -1,12 +1,12 @@
-<h1 align="center">CTI</h1>
+<h1 align="center">concise-ti</h1>
 
-CTI (**Concise Terminal Interface**, codename Watson) is a lightweight, dependency-free, Bun-native TypeScript framework for building command-line tools. Install it as a dependency, call it once from your entrypoint, and start writing command files. CTI discovers them, parses their arguments, routes to them, and renders their output.
+concise-ti (**Concise Terminal Interface**, codename Watson) is a lightweight, dependency-free, Bun-native TypeScript framework for building command-line tools. Install it as a dependency, call it once from your entrypoint, and start writing command files. concise-ti discovers them, parses their arguments, routes to them, and renders their output.
 
 <br/>
 
 ### Vision
 
-Installing a CLI framework should feel like installing Next.js, not like copying a starter kit. You install CTI, write an entrypoint that's one line long, drop files into a `commands` directory, and you have a working, typed, compilable CLI. Everything between the argument vector and your handler is CTI's job, not yours.
+Installing a CLI framework should feel like installing Next.js, not like copying a starter kit. You install concise-ti, write an entrypoint that's one line long, drop files into a `commands` directory, and you have a working, typed, compilable CLI. Everything between the argument vector and your handler is concise-ti's job, not yours.
 
 There are no configuration files to maintain and no wiring code to write. The framework handles the plumbing, so the developer writes only what each command does.
 
@@ -35,8 +35,8 @@ There are no configuration files to maintain and no wiring code to write. The fr
 
 - **No Boilerplate** No manual imports or routing logic, just files in a `commands` directory.
 - **Typed Arguments** Flags and positionals are declared once and arrive in your handler already parsed, coerced, and typed.
-- **Zero-Config** CTI discovers commands from the filesystem; nothing to wire up by hand.
-- **Lightweight** No runtime dependencies; the framework is the only thing in your `node_modules` that's CTI.
+- **Zero-Config** concise-ti discovers commands from the filesystem; nothing to wire up by hand.
+- **Lightweight** No runtime dependencies; the framework is the only thing in your `node_modules` that's concise-ti.
 - **Bun-Optimized** Lean on Bun's speed and native TypeScript.
 - **Compiles to Binary** Ship your CLI as a single standalone executable with `bun build --compile`.
 
@@ -50,7 +50,7 @@ Requires [Bun](https://bun.sh) 1.3 or later.
 mkdir new-cli && cd new-cli
 
 bun init -y
-bun add cti
+bun add concise-ti
 ```
 
 You only ever touch two kinds of files: the entrypoint, written once, and command
@@ -66,7 +66,7 @@ new-cli/
 Create `commands/fib.ts`:
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 export default command({
   meta: { description: 'Compute a Fibonacci number, or the sequence leading to it' },
@@ -91,12 +91,12 @@ No manual parsing, no wiring it into a parser yourself.
 Create `main.ts`:
 
 ```typescript
-import { run } from 'cti'
+import { run } from 'concise-ti'
 
 void run({ name: 'new-cli', version: '1.0.0' }, import.meta)
 ```
 
-That's the whole entrypoint, and it's the last time you'll edit it. CTI automatically
+That's the whole entrypoint, and it's the last time you'll edit it. concise-ti automatically
 discovers commands from the `commands` directory, turns `fib.ts` into the `fib` route,
 parses argv against its declared flags, and dispatches automatically on every run.
 Add a second file and `app second-command` exists with no further wiring. See
@@ -133,9 +133,9 @@ one below based on what you're trying to do:
 - **Understand the mental model** — [Core Concepts](docs/concepts/core-concepts.md)
 - **Write commands well** — [Building Commands](docs/guides/building-commands.md), [Examples](docs/guides/examples.md), [Demos](docs/guides/demos.md)
 - **Look up a flag/routing/I/O detail** — [Features](docs/features/), one page per capability
-- **See how CTI is built internally** — [Architecture](docs/architecture/core.md): runtime, router, parser, I/O, types
+- **See how concise-ti is built internally** — [Architecture](docs/architecture/core.md): runtime, router, parser, I/O, types
 - **Look up an exact type or function** — [API Reference](docs/reference/api-reference.md)
-- **Know why CTI is shaped this way** — [Vision](docs/principles/vision.md) & [Philosophy](docs/principles/philosophy.md)
+- **Know why concise-ti is shaped this way** — [Vision](docs/principles/vision.md) & [Philosophy](docs/principles/philosophy.md)
 - **Contribute or report a bug** — [Contributing Guide](docs/contributing/guide.md), [Testing](docs/contributing/testing.md)
 - **Know what's coming next** — [Roadmap](docs/future/roadmap.md)
 

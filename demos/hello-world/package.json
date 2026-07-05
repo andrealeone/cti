@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-hello-world",
+  "name": "concise-ti-demo-hello-world",
   "version": "1.0.0",
-  "description": "Simple greeting CLI built with CTI",
+  "description": "Simple greeting CLI built with concise-ti",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

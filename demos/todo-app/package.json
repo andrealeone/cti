@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-todo-app",
+  "name": "concise-ti-demo-todo-app",
   "version": "1.0.0",
-  "description": "Multi-command TODO manager built with CTI",
+  "description": "Multi-command TODO manager built with concise-ti",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

@@ -11,18 +11,18 @@ Requires [Bun](https://bun.sh) 1.3 or later.
 ```bash
 mkdir my-cli && cd my-cli
 bun init -y
-bun add cti
+bun add concise-ti
 ```
 
 ### Your first command
 
-CTI discovers commands from a `commands/` directory next to your entrypoint -
+concise-ti discovers commands from a `commands/` directory next to your entrypoint -
 no manifest to write by hand for this to work.
 
 Create `commands/hello.ts`:
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 export default command({
   meta: { description: 'Greet someone' },
@@ -36,7 +36,7 @@ export default command({
 Create `main.ts`:
 
 ```typescript
-import { run } from 'cti'
+import { run } from 'concise-ti'
 
 void run({ name: 'my-cli', version: '1.0.0' }, import.meta)
 ```

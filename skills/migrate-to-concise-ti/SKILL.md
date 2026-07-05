@@ -1,24 +1,24 @@
 ---
-name: migrate-to-cti
+name: migrate-to-concise-ti
 description: >-
   Use when porting an existing CLI (Yargs, Commander.js, Oclif, argparse/click, a
-  hand-rolled argv parser, a shell script, etc.) onto CTI, the Bun-native TypeScript
+  hand-rolled argv parser, a shell script, etc.) onto concise-ti, the Bun-native TypeScript
   CLI framework — mapping its command/subcommand structure, flags, and positionals
-  onto CTI's FlagSpec/ArgSpec, converting handlers into CommandModule.run(ctx),
+  onto concise-ti's FlagSpec/ArgSpec, converting handlers into CommandModule.run(ctx),
   replacing bespoke output/prompt/color code with ctx.io, and cutting over safely.
-  Not for scaffolding a brand-new CTI project; use start-building-with-cti for that.
-  Not for explaining or pitching CTI; use about-cti for that.
+  Not for scaffolding a brand-new concise-ti project; use start-building-with-concise-ti for that.
+  Not for explaining or pitching concise-ti; use about-concise-ti for that.
 ---
 
-# Migrating an existing CLI to CTI
+# Migrating an existing CLI to concise-ti
 
-This skill is the complete, self-contained playbook for porting a working CLI, in any language or framework, onto CTI. It assumes you can read the source of the CLI being migrated but know nothing about CTI going in.
+This skill is the complete, self-contained playbook for porting a working CLI, in any language or framework, onto concise-ti. It assumes you can read the source of the CLI being migrated but know nothing about concise-ti going in.
 
 ## Before touching code: build the command inventory
 
 Migrations fail when they're done file-by-file with no map. Before writing anything, walk the existing CLI and produce an inventory with one row per command:
 
-- **Route**: the words a user types (`deploy`, `db migrate`, `users list`). Nested subcommands become CTI's space-separated routes.
+- **Route**: the words a user types (`deploy`, `db migrate`, `users list`). Nested subcommands become concise-ti's space-separated routes.
 - **Flags**: name, type (string/boolean/number), short alias, default, required?, choices, and whether it repeats (`multiple`).
 - **Positionals**: name, required?, variadic (rest-style, e.g. `cp <src...> <dest>`)?
 - **Side effects**: network calls, filesystem writes, prompts, spawned processes, anything the handler does beyond parsing.
@@ -29,13 +29,13 @@ This inventory becomes both your route map and your test plan; every row is one 
 
 ## The target shape
 
-A CTI CLI has exactly three moving parts, and everything from the old CLI needs to land in one of them:
+A concise-ti CLI has exactly three moving parts, and everything from the old CLI needs to land in one of them:
 
 1. **Command modules**: plain objects (`CommandModule`) with `meta`, `flags`, `args`, and a `run(ctx)` handler. This is where each old subcommand's handler logic goes, largely unchanged; only the argument-reading and output-writing code at its edges changes.
 2. **A manifest**: maps route strings to command modules, built either inline (`defineManifest`) for a handful of commands or by directory scan (`discoverManifest`) for many. Old CLIs with a big subcommand tree (Commander's `.command()` chains, Oclif's `commands/` directory, argparse subparsers) map naturally onto the directory-scanned shape, since the on-disk layout mirrors the old subcommand tree almost 1:1.
 3. **The runtime**: `run(config, importMeta?)` replaces whatever dispatch loop, argv parser, and top-level try/catch the old CLI had. You delete that code; you don't port it.
 
-Everything reading `process.argv` manually, hand-rolled `switch` statements over `argv[2]`, or a bespoke help-text generator gets deleted, not translated line-by-line. CTI's router and parser replace all of it.
+Everything reading `process.argv` manually, hand-rolled `switch` statements over `argv[2]`, or a bespoke help-text generator gets deleted, not translated line-by-line. concise-ti's router and parser replace all of it.
 
 ## Picking inline vs. directory-scanned for the port
 
@@ -54,7 +54,7 @@ my-cli/
 └── tsconfig.json
 ```
 
-Shared helpers the old commands imported (config loaders, API clients, formatting utilities) move to plain modules alongside `commands/` (e.g. `lib/`, `state.ts`); they must **not** live inside the commands directory, since CTI turns every `.ts` file under it into a route. A file named `index.ts` collapses into its parent's route (`commands/db/index.ts` → `db`); files matching `*.test.ts` are skipped.
+Shared helpers the old commands imported (config loaders, API clients, formatting utilities) move to plain modules alongside `commands/` (e.g. `lib/`, `state.ts`); they must **not** live inside the commands directory, since concise-ti turns every `.ts` file under it into a route. A file named `index.ts` collapses into its parent's route (`commands/db/index.ts` → `db`); files matching `*.test.ts` are skipped.
 
 ## Step-by-step conversion
 
@@ -62,7 +62,7 @@ Shared helpers the old commands imported (config loaders, API clients, formattin
 
 ```typescript
 // main.ts
-import { run } from 'cti'
+import { run } from 'concise-ti'
 
 void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.meta)
 ```
@@ -70,7 +70,7 @@ void run({ name: 'my-cli', commandsDir: 'commands', version: '1.0.0' }, import.m
 or, for the inline shape:
 
 ```typescript
-import { command, defineManifest, run } from 'cti'
+import { command, defineManifest, run } from 'concise-ti'
 
 const deploy = command({ /* ... */ })
 const rollback = command({ /* ... */ })
@@ -85,7 +85,7 @@ void run({ name: 'my-cli', version: '1.0.0', manifest: defineManifest({ deploy, 
 For each row in your inventory, create the command file at the path matching its route, and build it with the `command()` helper:
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 interface DeployFlags {
   env: string
@@ -109,16 +109,16 @@ export default command<DeployFlags>({
 })
 ```
 
-Map old constructs onto CTI's contract:
+Map old constructs onto concise-ti's contract:
 
-| Old CLI concept                                    | CTI equivalent                                                                 |
+| Old CLI concept                                    | concise-ti equivalent                                                                 |
 | --------------------------------------------------- | ------------------------------------------------------------------------------- |
 | `.option('--env <env>', 'desc', 'staging')`          | `flags: { env: { type: 'string', default: 'staging', description: 'desc' } }`   |
 | `.option('-f, --force')` (boolean flag)              | `flags: { force: { type: 'boolean', short: 'f' } }`                             |
 | Flag repeated / array-valued (`--tag a --tag b`)     | `flags: { tag: { type: 'string', multiple: true } }`                            |
 | `.choices(['dev', 'staging', 'prod'])`               | `flags: { env: { type: 'string', choices: ['dev', 'staging', 'prod'] as const } }` |
 | Custom flag validation function                     | `flags: { env: { validate: (v) => isValid(v) || 'must be dev/staging/prod' } }` |
-| `.argument('<source>')` / `.argument('[dest]')`      | Declare in `args` for documentation; read via `ctx.positionals[0]`. CTI doesn't enforce arity for you, so validate at the top of `run()` |
+| `.argument('<source>')` / `.argument('[dest]')`      | Declare in `args` for documentation; read via `ctx.positionals[0]`. concise-ti doesn't enforce arity for you, so validate at the top of `run()` |
 | Variadic positional (`<files...>`)                   | `args: [{ name: 'files', variadic: true }]`, read the tail of `ctx.positionals` yourself |
 | `process.exit(1)` on failure                         | `return 1` from `run()`. The runtime sets `process.exitCode`; never call `process.exit()` yourself |
 | Top-level `try/catch` around the whole CLI           | Delete it. The runtime already catches thrown errors, formats them as `Error: <message>`, and exits 1. Keep your own `try/catch` only where you want a *better* message than the generic one |
@@ -133,24 +133,24 @@ Map old constructs onto CTI's contract:
 
 ### 3. Delete the old dispatch layer
 
-Once every command from the inventory has a CTI file, remove:
+Once every command from the inventory has a concise-ti file, remove:
 - The old argv-parsing library and its setup code (`yargs()`, `program.parse()`, Oclif's `Command` base class boilerplate, etc.)
 - Any hand-written help/usage text generator; `meta.description` and `meta.examples` replace it
 - The old top-level error handler / process-exit-code plumbing
-- Old flag-coercion helpers (string-to-number, string-to-boolean parsing); CTI's flag `type` does this via `util.parseArgs` under the hood, including for numeric defaults
+- Old flag-coercion helpers (string-to-number, string-to-boolean parsing); concise-ti's flag `type` does this via `util.parseArgs` under the hood, including for numeric defaults
 
 ### 4. Verify parity before cutting over
 
 For every inventory row, run the same invocation against both the old and new CLI and diff stdout/stderr/exit code (modulo cosmetic differences like color codes or spinner frames; compare on substrings/regex, not byte-for-byte). This catches the two most common regressions in this kind of port:
 - A flag default that was implicit in the old parser and got dropped when it was made explicit in `FlagSpec`
-- A positional that the old CLI treated as required (and errored without) but which CTI leaves as `undefined` unless you add your own check
+- A positional that the old CLI treated as required (and errored without) but which concise-ti leaves as `undefined` unless you add your own check
 
 Add a unit test per migrated command as you go: construct a `Context` directly and call `command.run(ctx)`:
 
 ```typescript
 import { describe, test, expect } from 'bun:test'
 import command from './commands/deploy'
-import type { Context, Io, Logger } from 'cti'
+import type { Context, Io, Logger } from 'concise-ti'
 
 test('deploys to the given environment', async () => {
   const ctx: Context<{ env: string; force: boolean }> = {
@@ -182,8 +182,8 @@ Drop the old build pipeline entirely; there is no separate bundling/minification
 
 ## Common pitfalls when migrating
 
-- **Porting the dispatch loop instead of deleting it.** The single biggest source of wasted effort is trying to keep the old argv-parsing/routing code "just in case." CTI's router and parser fully replace it. If a command isn't reachable after the port, that's a missing manifest entry or misplaced file, not a gap to patch with old code.
-- **Forgetting positionals aren't validated for you.** Frameworks like Commander throw automatically on a missing required argument. CTI hands you `ctx.positionals` as a plain array; a missing required positional is just `undefined` until you check for it yourself.
+- **Porting the dispatch loop instead of deleting it.** The single biggest source of wasted effort is trying to keep the old argv-parsing/routing code "just in case." concise-ti's router and parser fully replace it. If a command isn't reachable after the port, that's a missing manifest entry or misplaced file, not a gap to patch with old code.
+- **Forgetting positionals aren't validated for you.** Frameworks like Commander throw automatically on a missing required argument. concise-ti hands you `ctx.positionals` as a plain array; a missing required positional is just `undefined` until you check for it yourself.
 - **Leaving shared helpers inside the commands directory.** In a directory-scanned CLI, any `.ts` file under `commandsDir` becomes a route unless it's `*.test.ts`. A helper module accidentally left in `commands/` becomes a phantom command.
 - **Assuming `colour` (British spelling) works.** The interface is `ctx.io.color` with type `Color`. Any ported snippet, comment, or documentation that says `colour`/`Colour` needs the American spelling substituted before it will compile.
 - **Re-wrapping errors that don't need it.** The runtime already catches thrown errors and reports them with exit code 1. Only add your own `try/catch` where you want to show a more specific message than the generic `Error: <message>`.

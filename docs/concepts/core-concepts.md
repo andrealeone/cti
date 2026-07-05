@@ -1,6 +1,6 @@
 ## Core Concepts
 
-CTI's conceptual model is deliberately small: **commands**, a **manifest** that
+concise-ti's conceptual model is deliberately small: **commands**, a **manifest** that
 maps routes to them, and a **runtime** that dispatches one to the other. Understand
 these three ideas, and the rest of the framework (flags, context, I/O) falls into
 place around them.
@@ -46,18 +46,18 @@ const deploy = {
 }
 ```
 
-Wrap it with `command()` (an identity function from `cti`) so the compiler
+Wrap it with `command()` (an identity function from `concise-ti`) so the compiler
 infers the flag types correctly:
 
 ```typescript
-import { command } from 'cti'
+import { command } from 'concise-ti'
 
 export default command({ ... })
 ```
 
 ### Manifest
 
-A **manifest** is the map from route to command module CTI dispatches against:
+A **manifest** is the map from route to command module concise-ti dispatches against:
 
 ```typescript
 interface Manifest {
@@ -87,7 +87,7 @@ one built it. See [Manifest](../features/manifest.md) for the full picture.
 The **runtime** is `run()`, the dispatcher every entrypoint calls once:
 
 ```typescript
-import { run } from 'cti'
+import { run } from 'concise-ti'
 
 void run({ name: 'my-cli', version: '1.0.0' }, import.meta)
 ```
@@ -124,7 +124,7 @@ stderr and resolves to exit code `1` rather than throwing out of your entrypoint
 
 ### Flags and positionals
 
-CTI distinguishes **flags** (named, declared in `flags`) from **positionals**
+concise-ti distinguishes **flags** (named, declared in `flags`) from **positionals**
 (everything else, in order):
 
 ```bash
@@ -163,7 +163,7 @@ interface Config {
 }
 ```
 
-CTI doesn't impose a config *loader*: build the object however suits you and
+concise-ti doesn't impose a config *loader*: build the object however suits you and
 hand it to `run()`. It's available to every command via `ctx.config`.
 
 ### I/O
@@ -192,7 +192,7 @@ the [Roadmap](../future/roadmap.md) for what's landing next.
 ### Putting it together
 
 ```typescript
-import { command, run } from 'cti'
+import { command, run } from 'concise-ti'
 
 const hello = command({
   meta: { description: 'Greet someone' },

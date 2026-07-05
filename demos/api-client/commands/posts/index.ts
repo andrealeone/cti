@@ -1,4 +1,4 @@
-import { command } from 'cti'
+import { command } from 'concise-ti'
 import { DATA } from '../../lib/utils'
 
 // commands/posts/index.ts collapses into the parent route: this is `posts`,

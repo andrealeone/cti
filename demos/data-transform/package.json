@@ -1,9 +1,9 @@
 {
-  "name": "cti-demo-data-transform",
+  "name": "concise-ti-demo-data-transform",
   "version": "1.0.0",
-  "description": "Data transformation and piping CLI built with CTI",
+  "description": "Data transformation and piping CLI built with concise-ti",
   "keywords": [
-    "cti",
+    "concise-ti",
     "demo",
     "cli"
   ],

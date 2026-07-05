@@ -1,6 +1,6 @@
 ## Type System
 
-CTI's types are contracts between components, not an afterthought. Only `run`
+concise-ti's types are contracts between components, not an afterthought. Only `run`
 is required on a `CommandModule`; everything else is optional, so a minimal
 command stays minimal.
 
