@@ -4,6 +4,7 @@
 .claude
 .fallow
 
+bin
 dist
 node_modules
 

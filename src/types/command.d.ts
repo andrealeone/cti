@@ -30,5 +30,13 @@ export interface CommandModule<F = Record<string, unknown>> {
   meta?: CommandMeta
   flags?: Record<string, FlagSpec>
   args?: ArgSpec[]
+  /**
+   * Skip strict flag parsing and hand the command's remaining argv straight
+   * to `ctx.positionals` unchanged. Needed by commands that forward arbitrary
+   * flags to another CLI (e.g. `concise-ti compile` passing `--outfile` etc.
+   * through to `bun build`), since `node:util`'s `parseArgs` in strict mode
+   * rejects any option not declared in `flags`.
+   */
+  rawArgs?: boolean
   run: (ctx: Context<F>) => void | number | Promise<void | number>
 }

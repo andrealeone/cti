@@ -173,7 +173,9 @@ async function invokeCommand(
   logger: ReturnType<typeof createLogger>,
 ): Promise<number> {
   try {
-    const parsed = parseAndCoerce(remaining, command.flags ?? {}),
+    const parsed = command.rawArgs
+        ? { values: {}, positionals: remaining }
+        : parseAndCoerce(remaining, command.flags ?? {}),
       context: Context = {
         flags: parsed.values,
         positionals: parsed.positionals,

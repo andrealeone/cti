@@ -5,32 +5,32 @@
     "": {
       "name": "concise-ti",
       "devDependencies": {
-        "@types/bun": "^1.3.14",
-        "@types/node": "^26.1.0",
-        "fallow": "^3.0.0",
-        "oxfmt": "^0.57.0",
-        "oxlint": "^1.72.0",
-        "oxlint-tsgolint": "^0.24.0",
-        "typescript": "^6.0.3",
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "fallow": "latest",
+        "oxfmt": "latest",
+        "oxlint": "latest",
+        "oxlint-tsgolint": "latest",
+        "typescript": "latest",
       },
     },
   },
   "packages": {
-    "@fallow-cli/darwin-arm64": ["@fallow-cli/darwin-arm64@3.0.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-TTHcDnN6ipqwml5FgOt0axHXiTeoTOarWRcbmykyHzDaSSF9tEg//dL2aoOxJUearK+aUSpmY2U4ar4rOmOnHg=="],
+    "@fallow-cli/darwin-arm64": ["@fallow-cli/darwin-arm64@3.1.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-VDMyQ5/ZLvbVYBax/6duHHolLMe8h3rFx3Rqp1BeNGUrZ+xMIy3punzPHq0s8yFDhJzT1G/MNZ1HxVxM8jCNMQ=="],
 
-    "@fallow-cli/darwin-x64": ["@fallow-cli/darwin-x64@3.0.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-u4KEs4Mchhwuei5IASx5yS80LjjDNT/Xll7CwvZbMD0JOPV1BlWDdCccLGjW+Dr0MyusKvpwhQJosgKrKCXeOg=="],
+    "@fallow-cli/darwin-x64": ["@fallow-cli/darwin-x64@3.1.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-No2w4T8j6a10tv2drSPII6r3JUeA6RBpGNOrMDGfsYnn5Ia7VWQX1ftQuvdzo19BEfcu6ZogrrilUVFxer+P0w=="],
 
-    "@fallow-cli/linux-arm64-gnu": ["@fallow-cli/linux-arm64-gnu@3.0.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-QH7RMbXesaPjXInfaZvIquMgFFU3sBex8a7NRCQKgdtXVsaDNCViLAMjT8jgI3ueiVmwUwHk2hiuktdgMd7o/w=="],
+    "@fallow-cli/linux-arm64-gnu": ["@fallow-cli/linux-arm64-gnu@3.1.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-9SY/EUimaXCkmLxV5bT4HbaT/UJgF/OSFXe9jKt8K4DLRSvYvPOBsZjXaeiueDGuvEUgXNoYoWb7SgeeOQOEnw=="],
 
-    "@fallow-cli/linux-arm64-musl": ["@fallow-cli/linux-arm64-musl@3.0.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-gwoM0kcBPyEBajsap8DqmQ/C4OsnprPnvM6JMQ1etH+cdJiF94zkomnf/+i8nHVzL093rvqzTvVZnipNSYBmEQ=="],
+    "@fallow-cli/linux-arm64-musl": ["@fallow-cli/linux-arm64-musl@3.1.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-DVJMkvCWRe449tAqSaSuH3VrWd0FFiBn3W28E9ZWwsN71S+tPIntPbZ/ky0kYjOPMztUKcuGfahO3CoMDsMn2Q=="],
 
-    "@fallow-cli/linux-x64-gnu": ["@fallow-cli/linux-x64-gnu@3.0.0", "", { "os": "linux", "cpu": "x64" }, "sha512-lRgS1GbC9jCNr7j7aXv0bFhuy0wundUzaa9tCyPlSS7pga2uLIkOnes0pugv4SuLkIYy7moTapEdLebivDzFKg=="],
+    "@fallow-cli/linux-x64-gnu": ["@fallow-cli/linux-x64-gnu@3.1.0", "", { "os": "linux", "cpu": "x64" }, "sha512-H1xwRB7fMQYGsYFVeB2qETDWAVKmdwxfh2sPSwwZjx4pdQj7CM5r0KrWQ1NWdcmHtkFu9rUF8nHoGjcEyNkfDw=="],
 
-    "@fallow-cli/linux-x64-musl": ["@fallow-cli/linux-x64-musl@3.0.0", "", { "os": "linux", "cpu": "x64" }, "sha512-CsDTKLE/TJwZBZnU5/4GBkWrw9XaSVetrxiFRlnhHLJ2KpOrrBF7nxeTREvl/GdJTxlu5fY1JlAm5HVAKmyw0A=="],
+    "@fallow-cli/linux-x64-musl": ["@fallow-cli/linux-x64-musl@3.1.0", "", { "os": "linux", "cpu": "x64" }, "sha512-liymYbK4Gy/wkcGmNLtm2cpYnpgIhWZZBQxFdBzkgF9LjtO2VoiyRzNmmyxpwd0ZSJ9WARKtNtfF/LFoDwaVEA=="],
 
-    "@fallow-cli/win32-arm64-msvc": ["@fallow-cli/win32-arm64-msvc@3.0.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-6/nUg47m+VO9dRTRlbzPHaxce7mpR/ltB0W9iSjdj+fxB3JlLRpz91mQ1LJRRUGmIXgcbsxswnKwnOTld+2RbA=="],
+    "@fallow-cli/win32-arm64-msvc": ["@fallow-cli/win32-arm64-msvc@3.1.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-GcDbyQr76xecxkQ2SiTiVGE4NavoJkmzxErqm6aKxcrAQJO7rUIL4GN5G/OiaYBXuvVlwC/nRF8TRzRVO58u6w=="],
 
-    "@fallow-cli/win32-x64-msvc": ["@fallow-cli/win32-x64-msvc@3.0.0", "", { "os": "win32", "cpu": "x64" }, "sha512-IQE8RBjFGonbJ6Vz7hcQTZ6serIA4atFd0CIv+69EsN0pNzU5k57dUTHV6zx5Bnn/wgrjE6saSZrsYwSESoCwA=="],
+    "@fallow-cli/win32-x64-msvc": ["@fallow-cli/win32-x64-msvc@3.1.0", "", { "os": "win32", "cpu": "x64" }, "sha512-prGJl02GinPAaItDbwG5kMEv/56xmlEGj76dtyBIXjU/SLqzhmN6qfP8rGgde3hnTcfTUHYKm/9ZBmRwKH3tBg=="],
 
     "@oxfmt/binding-android-arm-eabi": ["@oxfmt/binding-android-arm-eabi@0.57.0", "", { "os": "android", "cpu": "arm" }, "sha512-qVBsEO+KugOsCmUHcO8iqNnqc65p7PCKpCs8M66mPZ+Ri+CWbcpoQOEJBg2OTu03+0qu++NK1jj6IzvQVs0Sig=="],
 
@@ -128,7 +128,7 @@
 
     "detect-libc": ["detect-libc@2.1.2", "", {}, "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="],
 
-    "fallow": ["fallow@3.0.0", "", { "dependencies": { "detect-libc": "2.1.2" }, "optionalDependencies": { "@fallow-cli/darwin-arm64": "3.0.0", "@fallow-cli/darwin-x64": "3.0.0", "@fallow-cli/linux-arm64-gnu": "3.0.0", "@fallow-cli/linux-arm64-musl": "3.0.0", "@fallow-cli/linux-x64-gnu": "3.0.0", "@fallow-cli/linux-x64-musl": "3.0.0", "@fallow-cli/win32-arm64-msvc": "3.0.0", "@fallow-cli/win32-x64-msvc": "3.0.0" }, "bin": { "fallow": "bin/fallow", "fallow-lsp": "bin/fallow-lsp", "fallow-mcp": "bin/fallow-mcp" } }, "sha512-GX9ujIhUxSXvxA1GpZUlD1gz9SUSDSJ+nOSRKBN4F1lN85AFeUBmYw5HhdbumE9IJAR+9jAnTfcUMfyqQ2b5xA=="],
+    "fallow": ["fallow@3.1.0", "", { "dependencies": { "detect-libc": "2.1.2" }, "optionalDependencies": { "@fallow-cli/darwin-arm64": "3.1.0", "@fallow-cli/darwin-x64": "3.1.0", "@fallow-cli/linux-arm64-gnu": "3.1.0", "@fallow-cli/linux-arm64-musl": "3.1.0", "@fallow-cli/linux-x64-gnu": "3.1.0", "@fallow-cli/linux-x64-musl": "3.1.0", "@fallow-cli/win32-arm64-msvc": "3.1.0", "@fallow-cli/win32-x64-msvc": "3.1.0" }, "bin": { "fallow": "bin/fallow", "fallow-lsp": "bin/fallow-lsp", "fallow-mcp": "bin/fallow-mcp" } }, "sha512-sAxl9DwoArMGsYcENpLqI50bKcU8YRqPuFdzkISL9cj/O4hIDGgoMYv/oN1/FmbSjVC/VY+tv7NGV9KZ9JT4Dw=="],
 
     "oxfmt": ["oxfmt@0.57.0", "", { "dependencies": { "tinypool": "2.1.0" }, "optionalDependencies": { "@oxfmt/binding-android-arm-eabi": "0.57.0", "@oxfmt/binding-android-arm64": "0.57.0", "@oxfmt/binding-darwin-arm64": "0.57.0", "@oxfmt/binding-darwin-x64": "0.57.0", "@oxfmt/binding-freebsd-x64": "0.57.0", "@oxfmt/binding-linux-arm-gnueabihf": "0.57.0", "@oxfmt/binding-linux-arm-musleabihf": "0.57.0", "@oxfmt/binding-linux-arm64-gnu": "0.57.0", "@oxfmt/binding-linux-arm64-musl": "0.57.0", "@oxfmt/binding-linux-ppc64-gnu": "0.57.0", "@oxfmt/binding-linux-riscv64-gnu": "0.57.0", "@oxfmt/binding-linux-riscv64-musl": "0.57.0", "@oxfmt/binding-linux-s390x-gnu": "0.57.0", "@oxfmt/binding-linux-x64-gnu": "0.57.0", "@oxfmt/binding-linux-x64-musl": "0.57.0", "@oxfmt/binding-openharmony-arm64": "0.57.0", "@oxfmt/binding-win32-arm64-msvc": "0.57.0", "@oxfmt/binding-win32-ia32-msvc": "0.57.0", "@oxfmt/binding-win32-x64-msvc": "0.57.0" }, "peerDependencies": { "svelte": "^5.0.0", "vite-plus": "*" }, "optionalPeers": ["svelte", "vite-plus"], "bin": { "oxfmt": "bin/oxfmt" } }, "sha512-ZB7Bi+rGDSqmVIo9jwcLyFgjxXvQhDdU+jx+ZrVy6VRiVXK2+CHc4hO3J4dUQjHe7V0ymHB+MDuv5z+NhK07HA=="],
 

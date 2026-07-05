@@ -14,5 +14,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "demos/**/*", "tests/**/*"]
+  "include": ["src/**/*", "cli/**/*", "demos/**/*", "tests/**/*"]
 }
