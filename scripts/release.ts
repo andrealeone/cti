@@ -15,9 +15,20 @@ if (branch !== 'main') {
   process.exit(1)
 }
 
-await $`bun check:types`
-await $`bun lint`
-await $`bun test`
+async function runQuiet(label: string, command: ReturnType<typeof $>) {
+  console.log(`Running ${label}...`)
+
+  const result = await command.quiet().nothrow()
+
+  if (result.exitCode !== 0) {
+    console.error(result.stderr.toString())
+    process.exit(result.exitCode)
+  }
+}
+
+await runQuiet('type check', $`bun check:types`)
+await runQuiet('lint', $`bun lint`)
+await runQuiet('tests', $`bun test`)
 
 const { name, version } = (await Bun.file('package.json').json()) as {
   name: string
@@ -27,9 +38,9 @@ const { name, version } = (await Bun.file('package.json').json()) as {
 const prerelease = version.match(/-([a-zA-Z]+)\.\d+$/),
   tag = prerelease ? prerelease[1] : 'latest'
 
-console.log(`Publishing ${name}@${version} with dist-tag "${tag}"${dryRun ? ' (dry run)' : ''}`)
-
-await $`npm publish --tag ${tag} ${dryRun ? '--dry-run' : ''}`
+console.log(
+  `\nChecks passed. Publish ${name}@${version} with dist-tag "${tag}" by running (with your OTP):\n\n  npm publish --tag ${tag} --otp=<code>${dryRun ? ' --dry-run' : ''}\n`,
+)
 
 if (!dryRun) {
   await $`git tag v${version}`
