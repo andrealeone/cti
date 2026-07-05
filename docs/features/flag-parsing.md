@@ -99,3 +99,11 @@ run(ctx) {
 4. Values with no match fall back to the flag's `default`, if any
 
 See [Core Module](../architecture/core.md) for the implementation.
+
+## Opting out: `rawArgs`
+
+Strict `parseArgs` rejects any flag not declared in `flags`, which breaks
+commands that need to forward unknown flags to another program. Set
+`rawArgs: true` on the command module to skip parsing altogether — `ctx.flags`
+is `{}` and `ctx.positionals` is the untouched remaining argv. See
+[Command Modules](command-modules.md#rawargs).
