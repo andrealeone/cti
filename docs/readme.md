@@ -26,6 +26,7 @@ future/                 roadmap
 - **[Building Commands](guides/building-commands.md)**: flags, positionals, I/O, error handling, testing
 - **[Examples](guides/examples.md)**: real-world command patterns to copy
 - **[Demos](guides/demos.md)**: runnable example CLIs in [`/demos`](../demos)
+- **[Compiling a Binary](guides/compiling-a-binary.md)**: `bun build --compile` vs `concise-ti compile`, and which one your CLI needs
 - **[Features](features/)**: one page per capability, including [flags](features/flag-parsing.md), [positionals](features/positional-arguments.md), [routing](features/command-routing.md), [manifest](features/manifest.md), [colors](features/colors.md), [prompts](features/prompts.md), [spinners](features/spinners.md), and [logger](features/logger.md)
 
 ### Understanding the internals

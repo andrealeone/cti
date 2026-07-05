@@ -1,12 +1,13 @@
 ## Core Module: Runtime, Router & Parser
 
 The core module is concise-ti's command dispatch engine, where argv becomes command
-execution. It's four files:
+execution. It's five files:
 
 - **Runtime** (`runtime.ts`): `run()` and `defineManifest()`
 - **Discovery** (`discovery.ts`): `discoverManifest()`, the filesystem-scanning counterpart to `defineManifest`
 - **Router** (`router.ts`): route resolution and lookup building
 - **Parser** (`parser.ts`): raw argv → typed flags and positionals
+- **Compile** (`compile.ts`): `compile()`, backing the `concise-ti compile` bin command
 
 The flow is: **argv → resolve manifest → resolve route → parse flags → build context → invoke command**.
 
@@ -53,6 +54,44 @@ Walks `commandsDir` recursively, and for every `.ts` file (skipping `*.test.ts`)
 builds a route from its path relative to `commandsDir` (`index.ts` collapses
 into its parent's route) and dynamically imports its default export. See
 [Manifest](../features/manifest.md) for the full comparison with `defineManifest`.
+
+### `compile(argv)`
+
+Backs the `concise-ti compile <entry> [...bun build flags]` bin command. It
+exists because `discoverManifest`'s `readdirSync` scan works under `bun run`
+but not inside a `bun build --compile` binary, which executes against a
+virtual filesystem with no real `commands/` directory to see. Since `bun
+build --compile` bundles the entry file before any user code runs, nothing
+triggered from inside `run()` at runtime can retroactively make the bundler
+embed command files.
+
+`compile`:
+
+1. Spawns the entry as a real (uncompiled) `bun run` subprocess with
+   `CONCISE_TI_EXTRACT_MANIFEST` set to a temp path. `run()` checks that env
+   var before dispatch: it resolves the manifest exactly as it normally would
+   (`config.manifest`, or `discoverManifest`) and writes the result back as
+   JSON instead of running a command. The entrypoint's `void run(config,
+import.meta)` call needs no changes for this to work
+2. If the entry used `config.manifest` (an inline manifest is plain data, no
+   filesystem scan involved), shells out to `bun build --compile` directly
+3. Otherwise renders a manifest module whose entries use a **literal-string**
+   dynamic `import()` per discovered command (`renderManifestModule`); `bun
+build --compile` can statically discover and embed a literal `import()`
+   argument, unlike the computed path `discoverManifest` uses at runtime
+4. Temporarily overwrites the framework's own `generated-manifest.ts`
+   placeholder (`src/core/generated-manifest.ts`, inside
+   `node_modules/concise-ti/`) with the rendered module, compiles the entry
+   **unmodified**, then restores the placeholder
+5. At runtime, `run()` detects it's executing inside a compiled binary
+   (`importMeta.dir` starts with `/$bunfs/`) and imports
+   `generated-manifest.ts` instead of calling `discoverManifest`
+
+Nothing is ever written into the project's git tree: the substitution happens
+inside the installed package's own `node_modules` copy and is reverted
+immediately after the build. See
+[Manifest](../features/manifest.md#compiling-a-commandsdir-cli-to-a-binary)
+for the user-facing walkthrough.
 
 ### Router: `buildRouteLookup` and `resolveRoute`
 
@@ -116,6 +155,7 @@ command, because the other ninety-nine are never touched.
 | `buildRouteLookup()` | `router.ts`    | Convert a manifest into a fast lookup map    |
 | `resolveRoute()`     | `router.ts`    | Longest-prefix route matching                |
 | `parseAndCoerce()`   | `parser.ts`    | Parse argv and coerce to typed flags         |
+| `compile()`          | `compile.ts`   | Back `concise-ti compile`                    |
 
 ### Related
 
