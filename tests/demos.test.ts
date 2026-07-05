@@ -52,6 +52,21 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
     { name: 'greets a named person', args: ['hello', 'Alice'], stdout: ['Hello, Alice!'] },
     { name: 'defaults to World', args: ['hello'], stdout: ['Hello, World!'] },
     { name: 'says goodbye', args: ['goodbye', 'Bob'], stdout: ['Goodbye, Bob!'] },
+    {
+      name: 'default help command lists commands with branding',
+      args: ['help'],
+      stdout: [/hello \d.*\(built with concise-ti\)/, /hello\s+Greet someone/, /goodbye/],
+    },
+    {
+      name: 'default version command prints the heading',
+      args: ['version'],
+      stdout: [/hello \d.*\(built with concise-ti\)/],
+    },
+    {
+      name: 'no arguments defaults to help',
+      args: [],
+      stdout: [/\(built with concise-ti\)/, /Commands:/],
+    },
   ],
   'todo-app': [
     {
@@ -78,6 +93,7 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
     {
       name: 'blocks rollback without --force',
       args: ['rollback', '--env', 'staging'],
+      env: { DEPLOY_TOOL_ALLOW_ROLLBACK: '1' },
       exit: 1,
       stdout: [/--force/],
     },
@@ -96,6 +112,18 @@ const EXPECTATIONS: Record<string, DemoCase[]> = {
       args: ['deploy', '--env', 'bogus'],
       exit: 1,
       stderr: [/Invalid environment/],
+    },
+    {
+      name: 'skips rollback from dispatch by default (config.skip)',
+      args: ['rollback', '--env', 'staging', '--force'],
+      exit: 1,
+      stderr: [/Unknown command/],
+    },
+    {
+      name: 'rollback works once explicitly enabled',
+      args: ['rollback', '--env', 'staging', '--force'],
+      env: { DEPLOY_TOOL_ALLOW_ROLLBACK: '1' },
+      stdout: [/Rollback on staging complete/],
     },
   ],
   'api-client': [

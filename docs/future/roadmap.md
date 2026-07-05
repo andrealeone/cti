@@ -14,6 +14,7 @@ Stabilise the core framework:
 - [Done] Type system
 - [Done] I/O color output with TTY / NO_COLOR detection
 - [Done] `concise-ti compile`: makes `commandsDir` discovery work in `bun build --compile` binaries
+- [Done] Default `help` and `version` commands, generated from the manifest and `Config`, overridable and skippable via `config.skip`
 - [In Progress] Real `prompt` / `confirm` / `select` implementations (currently non-interactive stubs)
 - [In Progress] Real spinner animation (currently a no-op stub)
 - [In Progress] Complete documentation
@@ -27,7 +28,7 @@ Stabilise the core framework:
 Make the existing dispatcher and parser do more:
 
 - **Flag validation**: enforce `FlagSpec.choices` and `validate` during parsing
-- **`--help` and `--version`**: generated from command `meta` and `Config`
+- **Group-level help**: generated output for a partial route like `app db` with no matching leaf command
 - **Friendlier errors**: "did you mean?" suggestions on unknown commands
 - **Shell completions**: generate bash, zsh, and fish completion from the manifest
 

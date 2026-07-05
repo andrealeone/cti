@@ -96,12 +96,16 @@ Given a config and (when discovering commands from disk) `import.meta`, `run()`:
 
 1. Resolves a manifest: `config.manifest` if you set one, otherwise
    `discoverManifest(config.commandsDir ?? 'commands')`
-2. Matches `argv` against the manifest using **longest-prefix routing**, so
+2. Removes any route listed in `config.skip`, then adds default `help` and
+   `version` commands for those routes if not already defined (see
+   [Default Commands](../features/default-commands.md))
+3. Matches `argv` against the manifest using **longest-prefix routing**, so
    `users get 1` resolves to `users/get` with `['1']` left over as positionals
-3. Lazily imports the matched command's module
-4. Parses and coerces the remaining argv against the command's `flags`
-5. Builds the `Context` and calls `command.run(ctx)`
-6. Returns the process exit code (the handler's numeric return, or `0`)
+   — empty `argv` resolves to `config.entry` (default `'help'`)
+4. Lazily imports the matched command's module
+5. Parses and coerces the remaining argv against the command's `flags`
+6. Builds the `Context` and calls `command.run(ctx)`
+7. Returns the process exit code (the handler's numeric return, or `0`)
 
 ```
 argv: ['deploy', '--env=prod', 'src/']
@@ -121,6 +125,8 @@ command.run(ctx)  ──►  exit code
 
 Unknown routes and thrown errors are caught by `run()` itself: it writes to
 stderr and resolves to exit code `1` rather than throwing out of your entrypoint.
+A malformed or unresolvable `config.entry` is the exception — `run()` throws
+synchronously, since that's a config authoring mistake rather than user input.
 
 ### Flags and positionals
 
@@ -160,11 +166,18 @@ interface Config {
   targets?: string[]
   bin?: string
   manifest?: Manifest
+  skip?: string[]
+  entry?: string
 }
 ```
 
 concise-ti doesn't impose a config _loader_: build the object however suits you and
 hand it to `run()`. It's available to every command via `ctx.config`.
+
+`skip` removes routes from dispatch entirely — default (`help`/`version`),
+manifest, or discovered alike. `entry` overrides which route empty argv
+dispatches to (default `'help'`). See
+[Default Commands](../features/default-commands.md).
 
 `Config` isn't sealed — extend it with your own fields and pass that type to
 `run<ConfigType>()` to get a typed `ctx.config` in every command, with no
@@ -214,5 +227,6 @@ with no manifest to write by hand. That's the entire mental model.
 ### Next
 
 - **[Building Commands](../guides/building-commands.md)**: practical patterns
+- **[Default Commands](../features/default-commands.md)**: `help`, `version`, `config.skip`, and `config.entry`
 - **[Architecture](../architecture/core.md)**: how `run()` is implemented, module by module
 - **[API Reference](../reference/api-reference.md)**: every type and function

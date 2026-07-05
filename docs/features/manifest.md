@@ -127,8 +127,17 @@ inside `node_modules/concise-ti/` and is reverted immediately after the
 build, so there's nothing to `.gitignore` and nothing for `bun run` to ever
 see differently.
 
+## Default commands
+
+`run()` adds `help` and `version` entries to the resolved manifest for any of
+those two routes not already present, before matching argv against it. See
+[Default Commands](default-commands.md) for their output, `config.skip`,
+which removes routes (default or otherwise) from dispatch entirely, and
+`config.entry`, which overrides the route dispatched to for empty argv.
+
 ## See also
 
 - [Command Routing](command-routing.md): how the router matches a manifest against argv
+- [Default Commands](default-commands.md): the `help`/`version` routes added automatically, `config.skip`, and `config.entry`
 - [Core Concepts](../concepts/core-concepts.md): where the manifest fits in the dispatch flow
 - [Compiling a Binary](../guides/compiling-a-binary.md): step-by-step guide, flags, and troubleshooting

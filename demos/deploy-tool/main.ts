@@ -74,9 +74,15 @@ const status = command({
   },
 })
 
+// `rollback` is dangerous enough that it's opt-in: `config.skip` removes it
+// from dispatch entirely (not just from `help`'s listing) unless the operator
+// explicitly enables it, so `deploy rollback` is `Unknown command` by default.
+const rollbackEnabled = process.env.DEPLOY_TOOL_ALLOW_ROLLBACK === '1'
+
 void run({
   name: 'deploy-tool',
   bin: 'deploy',
   version: '1.0.0',
   manifest: defineManifest({ deploy, rollback, status }),
+  skip: rollbackEnabled ? [] : ['rollback'],
 })

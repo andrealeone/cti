@@ -45,12 +45,17 @@ The `Context` passed to every command exposes:
 > Smaller demos use `defineManifest` for simplicity; larger demos use `discoverManifest`
 > to automatically load commands from separate files.
 
+> Every demo also gets a `help` and a `version` command for free — `run()` adds
+> them automatically for any route not already defined, branded with
+> `(built with concise-ti)`. Running a demo with no arguments dispatches to `help`.
+> See [Default Commands](../docs/features/default-commands.md).
+
 ## Demos
 
 | Demo             | Demonstrates                                                                                                                                                                                                             | Pattern              |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
-| `hello-world`    | Minimal command + dispatcher                                                                                                                                                                                             | Inline manifest      |
-| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner                                                                  | Inline manifest      |
+| `hello-world`    | Minimal command + dispatcher, **default `help`/`version` commands**                                                                                                                                                      | Inline manifest      |
+| `deploy-tool`    | Typed flags (`--env`, `--verbose`, `--force`), **repeatable flags** (`--region`, `multiple: true`), **in-handler `choices` validation**, color, spinner, **`config.skip`** (env-gated `rollback`)                        | Inline manifest      |
 | `project-init`   | Flags + filesystem scaffolding from `ctx.cwd`                                                                                                                                                                            | Inline manifest      |
 | `api-client`     | Nested routes (`users/list`), **`index.ts` route collapsing**, env-driven config, **custom `ctx.config` fields via `run<ConfigType>()`**, **explicit `command<F, C>()` generics**, `args[]` specs, **command discovery** | File-based discovery |
 | `todo-app`       | Multiple commands, positionals, **`args[]` specs**, **`meta.aliases`/`meta.hidden`**, persisted state, **command discovery**                                                                                             | File-based discovery |
@@ -81,14 +86,22 @@ bun build ./main.ts --compile --outfile dist/hello
 ## A few examples
 
 ```bash
+# hello-world: the default help/version commands, no code required
+bun run ./demos/hello-world/main.ts help
+bun run ./demos/hello-world/main.ts help --json
+bun run ./demos/hello-world/main.ts version
+bun run ./demos/hello-world/main.ts             # no args: same as `help`
+
 # todo-app: state lives in ~/.concise-ti-todos.json
 bun run ./demos/todo-app/main.ts add "Buy groceries"
 bun run ./demos/todo-app/main.ts list
 bun run ./demos/todo-app/main.ts complete 1
 
-# deploy-tool: rollback is guarded
-bun run ./demos/deploy-tool/main.ts rollback --env staging          # exits 1: asks for --force
-bun run ./demos/deploy-tool/main.ts rollback --env staging --force  # proceeds
+# deploy-tool: rollback is guarded, and removed from dispatch by config.skip
+# unless explicitly re-enabled (see main.ts)
+bun run ./demos/deploy-tool/main.ts rollback --env staging               # exits 1: Unknown command
+DEPLOY_TOOL_ALLOW_ROLLBACK=1 bun run ./demos/deploy-tool/main.ts rollback --env staging          # exits 1: asks for --force
+DEPLOY_TOOL_ALLOW_ROLLBACK=1 bun run ./demos/deploy-tool/main.ts rollback --env staging --force  # proceeds
 
 # deploy-tool: --region is repeatable (multiple: true), --env is validated in the handler
 bun run ./demos/deploy-tool/main.ts deploy --env production --region us-east-1 --region eu-west-1
@@ -156,6 +169,8 @@ For a discovery-based demo with multiple commands, create files in `commands/` (
 **Core concise-ti features demonstrated across demos:**
 
 - **CommandModule**: `hello-world`, all demos
+- **Default `help`/`version` commands**: `hello-world`
+- **`config.skip`**: `deploy-tool` (env-gated `rollback`)
 - **Nested routes**: `api-client` (users/list, posts/list)
 - **`index.ts` route collapsing**: `api-client` (`commands/posts/index.ts` → `posts`)
 - **Typed flags**: `deploy-tool`, `project-init`, `data-transform`

@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path'
 
 import type { Config } from '@/types/config'
 import type { Context } from '@/types/context'
-import type { Manifest } from '@/types/manifest'
+import type { Manifest, ManifestEntry } from '@/types/manifest'
 import type { CommandModule } from '@/types/command'
 
 import { parseAndCoerce } from '@/core/parser'
@@ -201,6 +201,147 @@ async function invokeCommand(
   }
 }
 
+/** `<bin> <version> (built with concise-ti)`, shared by the default `help` and `version` commands. */
+function formatHeading(config: Config): string {
+  return `${config.bin} ${config.version} (built with concise-ti)`
+}
+
+/**
+ * Builds the default `help` command, listing every non-hidden route in `entries`.
+ * `entryRoute` is the slash-delimited route dispatched to for empty argv (`config.entry`,
+ * default `'help'`); when it isn't the default, the listing notes it explicitly.
+ */
+function buildHelpCommand(entries: ManifestEntry[], entryRoute: string): CommandModule {
+  return {
+    meta: { description: 'Show available commands' },
+    flags: { json: { type: 'boolean', description: 'Output as JSON' } },
+    run(ctx) {
+      const visible = entries.filter((entry) => !entry.meta?.hidden)
+
+      if (ctx.flags.json) {
+        ctx.io.write(
+          JSON.stringify({
+            name: ctx.config.bin,
+            version: ctx.config.version,
+            commands: visible.map((entry) => ({
+              route: entry.route.join('/'),
+              description: entry.meta?.description ?? null,
+            })),
+            entry: entryRoute,
+          }),
+        )
+
+        return 0
+      }
+
+      const width = visible.reduce((max, entry) => Math.max(max, entry.route.join('/').length), 0),
+        lines = [formatHeading(ctx.config), '', 'Commands:']
+
+      for (const entry of visible) {
+        const route = entry.route.join('/'),
+          description = entry.meta?.description
+
+        lines.push(description ? `  ${route.padEnd(width + 2)}${description}` : `  ${route}`)
+      }
+
+      lines.push('')
+
+      if (entryRoute !== 'help') lines.push('', `Running with no arguments invokes: ${entryRoute}`)
+
+      ctx.io.write(lines.join('\n'))
+
+      return 0
+    },
+  }
+}
+
+/** Builds the default `version` command. */
+function buildVersionCommand(): CommandModule {
+  return {
+    meta: { description: 'Show CLI version' },
+    run(ctx) {
+      ctx.io.write(formatHeading(ctx.config))
+
+      return 0
+    },
+  }
+}
+
+/**
+ * Appends default `help`/`version` entries to `entries` (filtered by `config.skip`)
+ * for any of those routes not already defined, overridden, or skipped. The `help`
+ * listing reflects the final entry set, defaults included, and notes `entryRoute`
+ * when it overrides the default empty-argv target.
+ */
+function withDefaultCommands(
+  entries: ManifestEntry[],
+  config: Config,
+  entryRoute: string,
+): ManifestEntry[] {
+  const skip = new Set(config.skip ?? []),
+    existingRoutes = new Set(entries.map((entry) => entry.route.join('/'))),
+    finalEntries = [...entries]
+
+  if (!skip.has('help') && !existingRoutes.has('help'))
+    finalEntries.push({
+      route: ['help'],
+      sourcePath: '<default:help>',
+      importer: () => Promise.resolve({ default: buildHelpCommand(finalEntries, entryRoute) }),
+      meta: { description: 'Show available commands' },
+    })
+
+  if (!skip.has('version') && !existingRoutes.has('version'))
+    finalEntries.push({
+      route: ['version'],
+      sourcePath: '<default:version>',
+      importer: () => Promise.resolve({ default: buildVersionCommand() }),
+      meta: { description: 'Show CLI version' },
+    })
+
+  return finalEntries
+}
+
+/**
+ * Validates and normalizes `config.entry` into its raw slash-delimited route string
+ * (default `'help'`). Only checks shape (non-empty, no leading/trailing/double
+ * slashes) — existence against the resolved manifest is checked separately by
+ * `assertEntryResolves`, once the final entry set (including defaults) is known.
+ */
+function resolveEntryRoute(config: Config): string {
+  const raw = config.entry
+
+  if (raw === undefined) return 'help'
+
+  if (raw.trim().length === 0)
+    throw new Error('Invalid config.entry: must be a non-empty, non-whitespace string')
+
+  const segments = raw.split('/')
+
+  if (raw !== raw.trim() || segments.some((segment) => segment.length === 0))
+    throw new Error(
+      `Invalid config.entry: "${raw}" must not have leading, trailing, or double slashes`,
+    )
+
+  return raw
+}
+
+/**
+ * Ensures `entryRoute` names an existing, non-skipped route in the final entry
+ * set. Throws rather than silently falling through to "Unknown command", since
+ * a bad `config.entry` is a config authoring mistake, not a user input error.
+ */
+function assertEntryResolves(
+  entryRoute: string,
+  skip: Set<string>,
+  lookup: Map<string, ManifestEntry>,
+): void {
+  if (skip.has(entryRoute))
+    throw new Error(`Invalid config.entry: "${entryRoute}" is also listed in config.skip`)
+
+  if (!lookup.has(entryRoute))
+    throw new Error(`Invalid config.entry: "${entryRoute}" does not match any known route`)
+}
+
 async function dispatch(
   config: Config,
   importMeta?: { dir: string },
@@ -218,7 +359,17 @@ async function dispatch(
   // Use name as default for bin if not provided
   if (!config.bin) config.bin = config.name
 
-  const match = resolveRoute(resolvedArgv, buildRouteLookup(manifest))
+  const skip = new Set(config.skip ?? []),
+    entryRoute = resolveEntryRoute(config),
+    filteredEntries = manifest.entries.filter((entry) => !skip.has(entry.route.join('/'))),
+    entries = withDefaultCommands(filteredEntries, config, entryRoute),
+    lookup = buildRouteLookup({ entries })
+
+  if (config.entry !== undefined) assertEntryResolves(entryRoute, skip, lookup)
+
+  const argvForMatch = resolvedArgv.length > 0 ? resolvedArgv : entryRoute.split('/')
+
+  const match = resolveRoute(argvForMatch, lookup)
 
   if (!match) {
     io.writeError(`Unknown command: ${resolvedArgv.join(' ') || '(none)'}`)

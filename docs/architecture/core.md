@@ -9,7 +9,7 @@ execution. It's five files:
 - **Parser** (`parser.ts`): raw argv → typed flags and positionals
 - **Compile** (`compile.ts`): `compile()`, backing the `concise-ti compile` bin command
 
-The flow is: **argv → resolve manifest → resolve route → parse flags → build context → invoke command**.
+The flow is: **argv → resolve manifest → filter `skip` → add default `help`/`version` → validate `entry` → resolve route → parse flags → build context → invoke command**.
 
 ### `run(config, importMeta?, argv?)`
 
@@ -36,15 +36,46 @@ See [Type System: Config](types.md#config) and `demos/api-client`.
 Internally it:
 
 1. Resolves the manifest (`config.manifest` or discovery)
-2. Matches `argv` against it, using a longest-prefix route match
-3. Lazily imports the matched command module
-4. Parses and coerces the remaining argv into typed flags
-5. Builds the `Context` and calls `command.run(ctx)`
-6. Returns the command's numeric result, or `0`
+2. Filters out any route listed in `config.skip`
+3. Adds default `help` and `version` entries for those two routes if not
+   already defined, overridden, or skipped (see
+   [Default Commands](../features/default-commands.md))
+4. If `config.entry` is set, validates it against the final entry set (see
+   below), throwing rather than resolving to an exit code if it's invalid
+5. Matches `argv` against the result, using a longest-prefix route match —
+   empty `argv` is treated as `[config.entry ?? 'help']`
+6. Lazily imports the matched command module
+7. Parses and coerces the remaining argv into typed flags
+8. Builds the `Context` and calls `command.run(ctx)`
+9. Returns the command's numeric result, or `0`
 
-An unmatched route or a thrown error is caught inside `run()` itself: it writes
-a message to stderr and resolves to exit code `1`, so your entrypoint never
-needs a try/catch around `run()`.
+An unmatched route or a thrown error from a command's `run()` is caught
+inside `run()` itself: it writes a message to stderr and resolves to exit
+code `1`, so your entrypoint never needs a try/catch around `run()`. A
+malformed or unresolvable `config.entry` is the one exception — it's a
+config authoring mistake rather than user input, so `run()` throws
+synchronously instead of degrading to exit code `1`.
+
+### Default `help` and `version`
+
+`run()` builds these two commands itself, closing over the final entry list
+so `help`'s listing reflects defaults and skips consistently:
+
+- **`help`**: writes a heading (`<bin> <version> (built with concise-ti)`)
+  followed by every non-`hidden` route and its `meta.description`. `--json`
+  prints the same data as `{ name, version, commands: [{ route, description }] }`.
+  If `config.entry` overrides the default, appends a line noting it.
+- **`version`**: writes just the heading line.
+
+Both read `config.bin` (falling back to `config.name`) and `config.version`.
+A route already present in the filtered manifest — user-defined or
+discovered — is never overwritten; a route listed in `config.skip` is never
+added.
+
+### `config.entry`
+
+Overrides the route dispatched to for empty argv (default `'help'`); see
+[Default Commands](../features/default-commands.md#configentry).
 
 ### `defineManifest(routes)`
 
@@ -171,5 +202,6 @@ command, because the other ninety-nine are never touched.
 
 - **[Core Concepts](../concepts/core-concepts.md)**: the dispatch flow, end to end
 - **[Manifest](../features/manifest.md)**: `defineManifest` vs `discoverManifest`
+- **[Default Commands](../features/default-commands.md)**: `help`, `version`, `config.skip`, and `config.entry`
 - **[Utils: Coerce](utils.md)**: type coercion details
 - **[Type System](types.md)**: `FlagSpec`, `Manifest`, `Config`
