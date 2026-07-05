@@ -15,9 +15,20 @@ if (branch !== 'main') {
   process.exit(1)
 }
 
-await $`bun check:types`
-await $`bun lint`
-await $`bun test`
+async function runQuiet(label: string, command: ReturnType<typeof $>) {
+  console.log(`Running ${label}...`)
+
+  const result = await command.quiet().nothrow()
+
+  if (result.exitCode !== 0) {
+    console.error(result.stderr.toString())
+    process.exit(result.exitCode)
+  }
+}
+
+await runQuiet('type check', $`bun check:types`)
+await runQuiet('lint', $`bun lint`)
+await runQuiet('tests', $`bun test`)
 
 const { name, version } = (await Bun.file('package.json').json()) as {
   name: string
@@ -25,13 +36,19 @@ const { name, version } = (await Bun.file('package.json').json()) as {
 }
 
 const prerelease = version.match(/-([a-zA-Z]+)\.\d+$/),
-  tag = prerelease ? prerelease[1] : 'latest'
+  yellow = (text: string) => `\x1b[33m${text}\x1b[0m`,
+  pkg = yellow(`${name}@${version}`)
 
-console.log(`Publishing ${name}@${version} with dist-tag "${tag}"${dryRun ? ' (dry run)' : ''}`)
+const registryCheck = await $`npm view ${name}@${version} version`.quiet().nothrow(),
+  publishedOnNpm = registryCheck.exitCode === 0,
+  gitTagExists = (await $`git tag -l v${version}`.text()).trim().length > 0
 
-await $`npm publish --tag ${tag} ${dryRun ? '--dry-run' : ''}`
+if (publishedOnNpm) console.warn(`\n${pkg} is already published on npm. Skipping publish step.`)
+else console.log(`\nPublish ${pkg}:\n\n  npm publish\n`)
 
-if (!dryRun) {
+if (gitTagExists) {
+  console.warn(`Git tag v${version} already exists. Skipping tag/release steps.\n\n`)
+} else if (!dryRun) {
   await $`git tag v${version}`
   await $`git push`
   await $`git push --tags`
