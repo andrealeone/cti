@@ -176,12 +176,14 @@ Mirror the new `commands/` layout in the test directory (`commands/db/migrate.ts
 
 ### 5. Rebuild the distribution step
 
-Whatever packaged the old CLI (`pkg`, `nexe`, a Docker image wrapping Node, a shebang'd JS file) is replaced by one command:
+Whatever packaged the old CLI (`pkg`, `nexe`, a Docker image wrapping Node, a shebang'd JS file) is replaced by one command. For the directory-scanned shape recommended above, that command is `concise-ti compile`, not `bun build --compile` directly: a compiled binary runs against a virtual filesystem that `discoverManifest`'s directory scan can't see. `concise-ti compile` runs the entry once as a real subprocess to resolve its manifest, then compiles the same, unmodified entry; no changes needed to how the entrypoint calls `run()`:
 
 ```bash
-bun build ./main.ts --compile --outfile dist/my-cli
+bunx concise-ti compile ./main.ts --outfile dist/my-cli
 ./dist/my-cli deploy --env=prod
 ```
+
+(Only a CLI built with the inline shape, `defineManifest`, has no filesystem scan to break and can compile directly with `bun build --compile`.)
 
 Drop the old build pipeline entirely; there is no separate bundling/minification/packaging step to keep around.
 

@@ -337,12 +337,20 @@ Mirror your test layout to your source layout for consistency, e.g. `commands/ad
 
 ## Building a binary
 
+A directory-scanned CLI (`commandsDir`/`discoverManifest`) must compile with
+`concise-ti compile`, not `bun build --compile` directly: a compiled binary
+runs against a virtual filesystem, so `discoverManifest`'s directory scan
+finds nothing there. `concise-ti compile` runs the entry once as a real
+subprocess to resolve its manifest, then compiles the same, unmodified entry;
+no changes needed to how the entrypoint calls `run()`.
+
 ```bash
-bun build ./main.ts --compile --outfile dist/my-cli
+bunx concise-ti compile ./main.ts --outfile dist/my-cli
 ./dist/my-cli hello Alice
 ```
 
-No further config needed; this is the whole release pipeline for a concise-ti CLI.
+An inline-manifest CLI (`defineManifest`, no `commands/` directory) has no
+filesystem scan to break, so it compiles directly with `bun build --compile`.
 
 ## Quick checklist for a new project
 
