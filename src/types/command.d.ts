@@ -1,3 +1,4 @@
+import type { Config } from '@/types/config'
 import type { Context } from '@/types/context'
 
 export interface FlagSpec {
@@ -26,7 +27,7 @@ export interface CommandMeta {
   examples?: readonly string[]
 }
 
-export interface CommandModule<F = Record<string, unknown>> {
+export interface CommandModule<F = Record<string, unknown>, C extends Config = Config> {
   meta?: CommandMeta
   flags?: Record<string, FlagSpec>
   args?: ArgSpec[]
@@ -38,5 +39,5 @@ export interface CommandModule<F = Record<string, unknown>> {
    * rejects any option not declared in `flags`.
    */
   rawArgs?: boolean
-  run: (ctx: Context<F>) => void | number | Promise<void | number>
+  run: (ctx: Context<F, C>) => void | number | Promise<void | number>
 }

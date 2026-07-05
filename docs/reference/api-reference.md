@@ -18,12 +18,12 @@ export type { CommandModule } from '@/types/command'
 #### CommandModule
 
 ```typescript
-interface CommandModule<F = Record<string, unknown>> {
+interface CommandModule<F = Record<string, unknown>, C extends Config = Config> {
   meta?: CommandMeta
   flags?: Record<string, FlagSpec>
   args?: ArgSpec[]
   rawArgs?: boolean
-  run: (ctx: Context<F>) => void | number | Promise<void | number>
+  run: (ctx: Context<F, C>) => void | number | Promise<void | number>
 }
 
 interface CommandMeta {
@@ -34,7 +34,9 @@ interface CommandMeta {
 }
 ```
 
-The default export of a command file. Only `run` is required.
+The default export of a command file. Only `run` is required. `C` is only
+needed when the CLI extends `Config` (see [Config](#config) and `run<ConfigType>()`
+below) and the command wants a typed `ctx.config`: `command<Flags, MyConfig>({ ... })`.
 
 #### FlagSpec
 
@@ -82,17 +84,21 @@ compile` passing `--outfile` etc. through to `bun build`), since `node:util`'s
 #### Context
 
 ```typescript
-interface Context<F = Record<string, unknown>> {
+interface Context<F = Record<string, unknown>, C extends Config = Config> {
   flags: F
   positionals: string[]
   route: string[]
   cwd: string
   env: Record<string, string | undefined>
-  config: Config
+  config: C
   io: Io
   logger: Logger
 }
 ```
+
+`C` mirrors whatever `ConfigType` was passed to `run<ConfigType>()`, so `ctx.config`
+is typed as your extended `Config` instead of the base one. See
+[Config](#config).
 
 #### Io
 
@@ -166,12 +172,20 @@ interface Config {
 If `manifest` is set, `run()` uses it directly; otherwise it discovers one from
 `commandsDir` (default `'commands'`). `bin` defaults to `name`.
 
+`Config` isn't sealed — a CLI can `extends Config` with its own fields (see
+`demos/api-client`) and pass that type to `run<ConfigType>()` so every
+command's `ctx.config` is typed as `ConfigType`, not the base `Config`.
+
 ### Functions
 
 #### `run(config, importMeta?, argv?)`
 
 ```typescript
-function run(config: Config, importMeta?: { dir: string }, argv?: string[]): Promise<number>
+function run<ConfigType extends Config = Config>(
+  config: ConfigType,
+  importMeta?: { dir: string },
+  argv?: string[],
+): Promise<number>
 ```
 
 The dispatcher. Uses `config.manifest` if present, otherwise discovers one from
@@ -182,6 +196,11 @@ resolves to the exit code: the command's numeric return, or `0`. On an
 unknown route or a thrown error, writes to stderr and resolves to `1`. When
 called with no explicit `argv` (the entrypoint case), also sets
 `process.exitCode`.
+
+Pass an explicit type argument to type every command's `ctx.config` as your
+extended `Config`: `run<ApiClientConfig>(config, import.meta)`. Commands then
+declare `command<Flags, ApiClientConfig>({ ... })` to read `ctx.config`
+without a cast.
 
 #### `defineManifest(routes)`
 

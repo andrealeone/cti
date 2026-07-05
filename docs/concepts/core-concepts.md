@@ -166,6 +166,10 @@ interface Config {
 concise-ti doesn't impose a config _loader_: build the object however suits you and
 hand it to `run()`. It's available to every command via `ctx.config`.
 
+`Config` isn't sealed — extend it with your own fields and pass that type to
+`run<ConfigType>()` to get a typed `ctx.config` in every command, with no
+casting. See [Context: Config](../features/context.md#config).
+
 ### I/O
 
 The **`Io`** interface is your window into the terminal: writing output,
